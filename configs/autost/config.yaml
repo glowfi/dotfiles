@@ -1,0 +1,6 @@
+interpreter: /bin/sh
+
+startup:
+  - clipmenud
+  - redshift -P -O 4500K
+  - ghkd -b -c ~/.config/ghkd/config.yaml
