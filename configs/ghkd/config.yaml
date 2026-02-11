@@ -61,12 +61,21 @@ keybindings:
           kwriteconfig6 --file kwinrc --group Plugins --key diminactiveEnabled false
           kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key Enabled false
           qdbus6 org.kde.plasmashell /PlasmaShell evaluateScript "p = panelById(panelIds[0]); p.location = 'bottom';p.height = 44;"
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key Enabled false
           notify-send 'Normal Mode'
 
       elif [ $current = "false" ]; then
           kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
           kwriteconfig6 --file kwinrc --group Plugins --key diminactiveEnabled true
           qdbus6 org.kde.plasmashell /PlasmaShell evaluateScript "p = panelById(panelIds[0]); p.location = 'top';p.height = 35;"
+
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key BorderSize 0
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key Enabled true
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key ExceptionPattern ".*"
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key ExceptionType 0
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key HideTitleBar true
+          kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key Mask 0
+
           qdbus6 org.kde.KWin /KWin reconfigure
           notify-send 'Tiling Mode'
       fi

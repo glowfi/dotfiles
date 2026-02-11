@@ -836,6 +836,11 @@ sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Kroh
 
 sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "KrohnkiteSetMaster" "Meta+Return,none,Krohnkite: Set master"
 
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Next Screen" "Meta+.,none,Switch to Next Screen"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Previous Screen" "Meta+,,none,Switch to Previous Screen"
+
+sudo -u "$USER" kwriteconfig6 --file ~/.config/kwinrc --group Windows --key ActiveMouseScreen false
+sudo -u "$USER" kwriteconfig6 --file ~/.config/kwinrc --group Windows --key SeparateScreenFocus true
 
 ### Add virtual desktop
 ```
