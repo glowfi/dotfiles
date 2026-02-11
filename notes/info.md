@@ -803,7 +803,7 @@ sed -i 's/#define FIBONACCI_SPIRAL_LAYOUT 0/#define FIBONACCI_SPIRAL_LAYOUT 1/g'
 ### KROHNKITE
 
 ```sh
-sudo pacman -S go-task
+sudo pacman -S go-task --noconfirm
 git clone https://codeberg.org/anametologin/Krohnkite
 cd Krohnkite
 go-task install
