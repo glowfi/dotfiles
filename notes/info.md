@@ -803,48 +803,39 @@ sed -i 's/#define FIBONACCI_SPIRAL_LAYOUT 0/#define FIBONACCI_SPIRAL_LAYOUT 1/g'
 ### KROHNKITE
 
 ```sh
-#!/usr/bin/env bash
-
-###### Add Tiling ######
-
-# Download Krohnkite
-
-cd
-git clone https://github.com/esjeon/krohnkite
-cd krohnkite
-make install
-mkdir -p $HOME/.local/share/kservices5/
-ln -s $HOME/.local/share/kwin/scripts/krohnkite/metadata.desktop $HOME/.local/share/kservices5/krohnkite.desktop
+sudo pacman -S go-task
+git clone https://codeberg.org/anametologin/Krohnkite
+cd Krohnkite
+go-task install
 cd ..
-rm -rf krohnkite
+rm -rf Krohnkite
 
-# Creating Breezerc to hide title bars
 
-touch $HOME/.config/breezerc
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key BorderSize 0
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key Enabled false
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key ExceptionPattern .\*
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key ExceptionType 0
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key HideTitleBar true
-sudo -u "${USER}" kwriteconfig6 --file breezerc --group "Windeco Exception 0" --key Mask 16
+sed -i 's/=.*,.*,/=none,none,/g' "$HOME/.config/kglobalshortcutsrc"
+sed -i 's/Walk Through Windows=.*/Walk Through Windows=Alt+Tab,Alt+Tab,Walk Through Windows/' "$HOME/.config/kglobalshortcutsrc"
 
-# Tiling Shortcuts
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 1" "Meta+1,none,Switch to Desktop 1"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 2" "Meta+2,none,Switch to Desktop 2"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 3" "Meta+3,none,Switch to Desktop 3"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 4" "Meta+4,none,Switch to Desktop 4"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 5" "Meta+5,none,Switch to Desktop 5"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop 6" "Meta+6,none,Switch to Desktop 6"
 
-sudo -u "${USER}" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Krohnkite: Cycle Layout" "Meta+ctrl+\.,none,Krohnkite: Cycle Layout"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 1" "Meta+\!,none,Window to Desktop 1"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 2" "Meta+@,none,Window to Desktop 2"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 3" "Meta+#,none,Window to Desktop 3"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 4" "Meta+$,none,Window to Desktop 4"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 5" "Meta+%,none,Window to Desktop 5"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop 6" "Meta+^,none,Window to Desktop 6"
 
-###### Post Setup Steps ######
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window Fullscreen" "Meta+Shift+F,none,Make Window Fullscreen"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window Close" "Ctrl+Shift+Q,none,Close Window"
 
-# Add gaps and Set new window as master
-# Set Screen-edge to none top left corner
-# Add Fullscreen shortcut
-# Set Default Terminal
-# Enable and configure Tiling
-# Enable Night Color
-# Disable Screenlocking and configure screenlocker
-# Set Mouse acc profile to adaptive
-# make window fullscreen shortcut
-# make Meta+B
-# make Meta+E
-# make Meta+P
-# make Meta+T
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "KrohnkiteNextLayout" "Meta+Ctrl+.,none,Krohnkite: Next Layout"
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "KrohnkiteFocusNext" "Meta+j,none,Krohnkite: Focus Next"
+
+sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "KrohnkiteSetMaster" "Meta+Return,none,Krohnkite: Set master"
+
+
+### Add virtual desktop
 ```
