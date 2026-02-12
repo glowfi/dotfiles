@@ -61,6 +61,7 @@ keybindings:
           kwriteconfig6 --file kwinrc --group Plugins --key diminactiveEnabled false
           qdbus6 org.kde.plasmashell /PlasmaShell evaluateScript "p = panelById(panelIds[0]); p.location = 'bottom';p.height = 44;"
           kwriteconfig6 --file breezerc --group "Windeco Exception 1" --key Enabled false
+
           qdbus6 org.kde.KWin /KWin reconfigure
 
           notify-send 'Normal Mode'
