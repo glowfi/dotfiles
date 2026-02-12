@@ -560,10 +560,6 @@ qemu-system-x86_64 \\
     ${_iso_sharedfolder_string} \\
     -pidfile \"\$PID_FILE\" &
 
-
-        # Open remote viewer
-        remote-viewer spice+unix:///run/user/1000/spice.sock &
-
 QEMU_PID=\$!
 echo \"[+] QEMU started (PID=\$QEMU_PID)\"
 
