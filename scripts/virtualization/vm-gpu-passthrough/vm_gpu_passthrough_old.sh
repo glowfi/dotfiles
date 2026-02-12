@@ -17,7 +17,7 @@ if [[ -f "$HOME/.config/gpupass" ]]; then
 	sudo sed -i 's/MODULES=(btrfs)/MODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
 
 	## Regenerate initramfs
-	sudo mkinitcpio -p linux-zen
+	sudo mkinitcpio -P
 
 	## Show message to remove flags
 	clear
@@ -45,7 +45,7 @@ else
 	sudo sed -i 's/MODULES=(btrfs nvidia nvidia_modeset nvidia_uvm nvidia_drm)/MODULES=(btrfs)/' /etc/mkinitcpio.conf
 
 	## Regenerate initramfs
-	sudo mkinitcpio -p linux-zen
+	sudo mkinitcpio -P
 
 	## Show message to add flags
 	clear

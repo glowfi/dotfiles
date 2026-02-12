@@ -97,7 +97,7 @@ systemctl enable libvirtd.service
 ########## Regenerate GRUB,mkinitcpio ##########
 
 grub-mkconfig -o /boot/grub/grub.cfg
-mkinitcpio -p linux-zen
+mkinitcpio -P
 
 ########## Checking for TPM ##########
 
