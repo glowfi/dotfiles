@@ -842,5 +842,8 @@ sudo -u "$USER" kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Swit
 sudo -u "$USER" kwriteconfig6 --file ~/.config/kwinrc --group Windows --key ActiveMouseScreen false
 sudo -u "$USER" kwriteconfig6 --file ~/.config/kwinrc --group Windows --key SeparateScreenFocus true
 
+sudo -u "$USER" kwriteconfig6 --file kdeglobals --group General --key TerminalApplication kitty
+
 ### Add virtual desktop
+### Add Keyboard open terminal here shortcut
 ```
