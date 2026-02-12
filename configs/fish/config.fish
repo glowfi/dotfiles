@@ -321,6 +321,11 @@ end
 #                           Custom Functions
 # ===================================================================
 
+function bang_bang
+    echo $history[1]
+end
+abbr -a !! --position anywhere --function bang_bang
+
 ### Ignore golang directory
 set go_loc_var (echo "go")
 
@@ -753,7 +758,7 @@ end
 function chooseTheme
     set choosen (printf "simple\nclassic\nminimal" | fzf)
     if test "$checkOS" = Linux
-        sed -i "953s/.*/ $choosen/" ~/.config/fish/config.fish && source ~/.config/fish/config.fish
+        sed -i "944/.*/ $choosen/" ~/.config/fish/config.fish && source ~/.config/fish/config.fish
     end
 end
 
@@ -984,3 +989,7 @@ export NNN_TRASH=1
 
 # MPV
 export MPV_SOURCE=(which mpv)
+
+# CUDA
+set LD_LIBRARY_PATH /opt/cuda/lib64 $LD_LIBRARY_PATH
+set PATH /opt/cuda/bin/ $PATH
