@@ -844,6 +844,11 @@ sudo -u "$USER" kwriteconfig6 --file ~/.config/kwinrc --group Windows --key Sepa
 
 sudo -u "$USER" kwriteconfig6 --file kdeglobals --group General --key TerminalApplication kitty
 
+sudo -u "$USER" kwriteconfig6 --file kwinrc --group NightColor --key Active true
+sudo -u "$USER" kwriteconfig6 --file kwinrc --group NightColor --key Mode Constant
+
+sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
+
 ### Add virtual desktop
 ### Add Keyboard open terminal here shortcut
 ```
