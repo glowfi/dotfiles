@@ -1,6 +1,5 @@
 interpreter: /bin/sh
 
 startup:
-  - redshift -P -O 4500K
   - ghkd -b -c ~/.config/ghkd/config.yaml
   - ~/.local/bin/wall.sh
