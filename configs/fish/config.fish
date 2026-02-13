@@ -123,7 +123,7 @@ alias mirru='_mirru'
 function takeSnapshot
     sudo timeshift --create --comments "Before Update $(date +'%B %e, %A %I:%M:%S %p %Z')"
 end
-alias upgrade="takeSnapshot;mirru;bash -c 'for i in {1..5}; do sudo pacman -Syyyu --noconfirm;yay -Syyyu --noconfirm && break || sleep 1; done';sudo sbctl sign /boot/vmlinuz-linux-zen;sudo sbctl sign /boot/grub/x86_64-efi/core.efi;sudo sbctl sign /boot/grub/x86_64-efi/grub.efi;sudo sbctl sign /boot/efi/EFI/GRUB/grubx64.efi;rgi"
+alias upgrade="takeSnapshot;mirru;bash -c 'for i in {1..5}; do sudo pacman -Syyyu --noconfirm;yay -Syyyu --noconfirm && break || sleep 1; done';sudo sbctl sign /boot/vmlinuz-linux-hardened;sudo sbctl sign /boot/grub/x86_64-efi/core.efi;sudo sbctl sign /boot/grub/x86_64-efi/grub.efi;sudo sbctl sign /boot/efi/EFI/GRUB/grubx64.efi;rgi"
 
 # Archive Unarchive
 alias comp='ouch compress'
@@ -267,7 +267,7 @@ alias shs="sudo systemctl enable --now sshd;sudo systemctl enable --now sshguard
 alias shd="sudo systemctl disable sshd;sudo systemctl disable sshguard"
 
 # Regenerate initramfs and grub 
-alias rgi="sudo grub-mkconfig -o /boot/grub/grub.cfg;sudo mkinitcpio -P;sudo sbctl sign /boot/vmlinuz-linux-zen;sudo sbctl sign /boot/grub/x86_64-efi/core.efi;sudo sbctl sign /boot/grub/x86_64-efi/grub.efi;sudo sbctl sign /boot/efi/EFI/GRUB/grubx64.efi"
+alias rgi="sudo grub-mkconfig -o /boot/grub/grub.cfg;sudo mkinitcpio -P;sudo sbctl sign /boot/vmlinuz-linux-hardened;sudo sbctl sign /boot/grub/x86_64-efi/core.efi;sudo sbctl sign /boot/grub/x86_64-efi/grub.efi;sudo sbctl sign /boot/efi/EFI/GRUB/grubx64.efi"
 
 # Fix audio
 alias afx='systemctl --user restart pipewire.service pipewire.socket wireplumber.service pipewire-pulse.service pipewire-pulse.socket pipewire-session-manager.service'
