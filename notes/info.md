@@ -851,8 +851,8 @@ sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 
 + Add virtual desktop
 + Add Keyboard open terminal here shortcut
++ install resouce monitor
 + make sure toggle tiling is working
 + check autostart works
 + nightlight feature check
-
 ```
