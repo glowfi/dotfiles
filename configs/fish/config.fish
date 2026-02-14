@@ -168,7 +168,7 @@ function mimp
 end
 
 # youtube-local
-alias yst='cd "$HOME/.local/bin/youtube-local";source "$HOME/.local/bin/youtube-local/env/bin/activate.fish";nohup python ./server.py &;rm nohup.out;deactivate;cd;echo "http://localhost:3060/https://youtube.com"|xclip -sel c'
+alias yst='cd "$HOME/.local/bin/youtube-local"; source "$HOME/.local/bin/youtube-local/env/bin/activate.fish"; nohup python ./server.py &; rm nohup.out; deactivate; cd; echo "http://localhost:3060/https://youtube.com" | fish -c '\''if test -n "$WAYLAND_DISPLAY"; wl-copy; else; xclip -sel c; end'\'''
 alias ysp='ps aux | grep "server.py" | grep "python" | awk \'{print $2}\' | xargs -ro kill -9'
 
 # Docker
@@ -235,7 +235,7 @@ alias rep="replaceWithSpecificWord"
 alias d="aria2c -j 16 -x 16 -s 16 -k 1M $argv"
 
 # Copy current path
-alias cpc='pwd | xclip -sel c;notify-send "Copied current path to clipboard"'
+alias cpc='pwd | if test "$XDG_SESSION_TYPE" = wayland; wl-copy; else; xclip -selection clipboard; end; notify-send "Copied current path to clipboard"'
 
 # Adjust Microphone Volume 
 alias mvol='micVOl'
