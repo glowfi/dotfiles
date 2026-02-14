@@ -552,8 +552,8 @@ function upgradeNeovim
         end
 
         # Copy Configs and snippets
-        cp -r ~/setup/configs/nvim ~/.config
-        cp -r ~/setup/configs/nvim/.vsnip/ ~
+        cp -r ~/.dotfiles/configs/nvim/ ~/.config
+        cp -r ~/.dotfiles/configs/nvim/.vsnip/ ~
 
         # Sync Plugins
         for i in (seq 6)
