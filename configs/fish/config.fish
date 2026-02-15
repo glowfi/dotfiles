@@ -94,7 +94,7 @@ alias ls='exa --icons -l --color=always --group-directories-first -F'
 alias cat="bat -p --theme=$BAT_THEME"
 
 # Changing top to bottom
-alias top="btm --theme $TOP_THEME"
+alias top="btop"
 
 # Fast copy for rsync
 alias cpx="cpx"
