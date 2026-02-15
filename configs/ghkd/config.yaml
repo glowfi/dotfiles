@@ -160,16 +160,7 @@ keybindings:
     keys: super+r
     interpreter: bash
     script: |
-      FILE="$HOME/.config/nightcolor"
-      if [ -f "$FILE" ]; then
-          notify-send "NighColor Disabled!"
-          rm "$FILE"
-          redshift -x
-      else
-          notify-send "NighColor Enabled!"
-          touch "$FILE"
-          redshift -P -O 4500K
-      fi
+      qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut "Toggle Night Color"
 
   - name: EasyEffects Toggle
     keys: alt+g
