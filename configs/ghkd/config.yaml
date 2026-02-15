@@ -14,6 +14,11 @@ keybindings:
     keys: super+shift+q
     run: nohup plasmashell --replace &
 
+  - name: Screenshot
+    keys: alt+a
+    interpreter: bash
+    run: spectacle
+
   # ============================================================
   # Plasma Logic (Complex Scripts)
   # ============================================================
@@ -147,14 +152,6 @@ keybindings:
               $HOME/.local/bin/libw "librewolf:$(date +%s)" "default-default" "librewolf"
           fi
       fi
-
-  - name: Screenshot
-    keys: alt+a
-    interpreter: bash
-    script: |
-      sed -i '126s/.*/fading = false;/' $HOME/.config/picom/picom.conf
-      windowshot.sh
-      sed -i '126s/.*/fading = true;/' $HOME/.config/picom/picom.conf
 
   - name: Night Color
     keys: super+r
