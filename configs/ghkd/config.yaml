@@ -105,7 +105,7 @@ keybindings:
     run: kitty -e "pulsemixer"
 
   - name: App Launcher
-    keys: super+m
+    keys: super+p
     run: bemenu-run -p "Run:" -i
 
   - name: Scrap YT
