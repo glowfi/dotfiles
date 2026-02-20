@@ -855,5 +855,6 @@ sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 + make sure toggle tiling is working
 + check autostart works
 + nightlight feature check
-+ remove switch display shortcut
++ remove switch display shortcut Meta+P
++ remove dolphin shortcut Meta+E
 ```
