@@ -19,6 +19,11 @@ keybindings:
     interpreter: bash
     run: spectacle
 
+  - name: clipmenu
+    keys: super+e
+    interpreter: bash
+    run: ~/.local/bin/clipmenu.sh
+
   # ============================================================
   # Plasma Logic (Complex Scripts)
   # ============================================================
@@ -131,7 +136,7 @@ keybindings:
           ctl="loginctl"
       fi
       case "$(printf "Lock\nSleep\nReboot\nShutdown" | bemenu -p "Choose:" -i)" in
-      'Lock') qdbus org.freedesktop.ScreenSaver /ScreenSaver Lock ;;
+      'Lock') qdbus6 org.freedesktop.ScreenSaver /ScreenSaver Lock ;;
       'Sleep') "$ctl" suspend ;;
       'Reboot') "$ctl" reboot ;;
       'Shutdown') "$ctl" poweroff ;;
