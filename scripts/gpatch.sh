@@ -42,14 +42,14 @@ for i in {1..5}; do sudo pacman -S --noconfirm steam && break || sleep 1; done
 for i in {1..5}; do yay -S --noconfirm mangohud lib32-mangohud && break || sleep 1; done
 mkdir -p "$HOME/.config/MangoHud/"
 cd "$HOME/.config/MangoHud/"
-wget "https://raw.githubusercontent.com/glowfi/setup/main/storage/MangoHud.conf" -O "MangoHud.conf"
+wget "https://raw.githubusercontent.com/glowfi/dotfiles/refs/heads/main/configs/MangoHud.conf" -O "MangoHud.conf"
 
 ### Goverlay
 
 for i in {1..5}; do sudo pacman -S --noconfirm goverlay && break || sleep 1; done
 mkdir -p "$HOME/.config/goverlay/"
 cd "$HOME/.config/goverlay/"
-wget "https://raw.githubusercontent.com/glowfi/setup/main/storage/MangoHud.conf" -O "MangoHud.conf"
+wget "https://raw.githubusercontent.com/glowfi/dotfiles/refs/heads/main/configs/MangoHud.conf" -O "MangoHud.conf"
 cd
 
 ### Feral gamemode
@@ -59,5 +59,5 @@ for i in {1..5}; do sudo pacman -S --noconfirm gamemode && break || sleep 1; don
 
 ### Save Scraper and Save Retriever from cloud
 
-cp -r $HOME/setup/scripts/misc/saveScraper.py $HOME/.local/bin/
-chmod +x $HOME/.local/bin/saveScraper.py
+# cp -r $HOME/setup/scripts/misc/saveScraper.py $HOME/.local/bin/
+# chmod +x $HOME/.local/bin/saveScraper.py
