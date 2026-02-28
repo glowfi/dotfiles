@@ -84,7 +84,6 @@ declare -A distro_family=(
 	[freedos]="notlinux"
 
 	# Windows
-	[windows10]="windows"
 	[windows11]="windows"
 
 	# Bootable USB Tools
@@ -1079,52 +1078,18 @@ EOF
 }
 
 getWindowsISOLink() {
-	# Define product IDs and names
-	declare -A products=(
-		["2618"]="❤️ Windows 10 22H2 v1 (19045.2965)"
-		["3113"]="❤️ Windows 11 24H2 (26100.1742)"
-	)
+	local selected_iso
+	selected_iso=$(sed 's/<a /\n<a /g' |
+		grep '\.iso</a>' |
+		sed -E 's/.*href=["\x27]?([^ "]+)["\x27]? .*>\s*([^<]+\.iso)\s*<\/a>.*/\2\t\1/' | sed '/^.*ge_release/d' | sort |
+		fzf --delimiter='\t' --with-nth=1 \
+			--preview='echo Link: {2}' --preview-window=down:1)
 
-	if [[ "$1" = "windows10" ]]; then
-		local selected_product_id="2618"
-	elif [[ "$1" = "windows11" ]]; then
-		local selected_product_id="3113"
-	else
-		echo "Unsupported windows product $1"
-		exit 1
+	if [[ -n "$selected_iso" ]]; then
+		local link
+		link=$(echo "$selected_iso" | awk -F'\t' '{print $2}')
+		echo "$link"
 	fi
-
-	# Fetch SKU information for the selected product ID
-	local sku_response=$(curl -s "https://api.gravesoft.dev/msdl/skuinfo?product_id=$selected_product_id")
-
-	# Use jq to extract and format the SKU information
-	local selected_sku=$(echo "$sku_response" | jq -r '.Skus[] | "\(.Id) \(.Description)"' | sort | fzf --header="Select a SKU")
-
-	# Check if a SKU was selected
-	if [ -z "$selected_sku" ]; then
-		echo "No SKU selected."
-		exit 1
-	fi
-
-	# Extract the SKU ID from the selected SKU
-	local sku_id=$(echo "$selected_sku" | awk '{print $1}')
-
-	# Fetch download options for the selected SKU
-	local download_response=$(curl -s "https://api.gravesoft.dev/msdl/proxy?product_id=$selected_product_id&sku_id=$sku_id")
-
-	# Use jq to extract and format the download options
-	local selected_download=$(echo "$download_response" | jq -r '.ProductDownloadOptions[] | "\(.Name) \(.Uri)"' | fzf --header="Select a download option")
-
-	# Check if a download option was selected
-	if [ -z "$selected_download" ]; then
-		echo "No download option selected."
-		exit 1
-	fi
-
-	# Extract the download URL from the selected download option
-	local downloadLink=$(echo "$selected_download" | awk '{print $NF}')
-
-	echo "${downloadLink}"
 }
 
 download_drivers() {
@@ -1146,7 +1111,7 @@ download_windows() {
 	fi
 
 	local windows_version="$1"
-	local iso_download_url=$(getWindowsISOLink "$windows_version")
+	local iso_download_url=$(curl -s https://massgrave.dev/windows_11_links | getWindowsISOLink "$windows_version")
 	local iso_file_name="${windows_version}.iso"
 
 	if [[ -z "${iso_download_url}" ]]; then
@@ -1159,7 +1124,7 @@ download_windows() {
 	local temporary_download_directory=$(echo "${DOWNLOAD_DIR}/tmp_download-${windows_version}-${current_timestamp}")
 	mkdir -p "${temporary_download_directory}"
 	cd "${temporary_download_directory}"
-	download "${iso_download_url}" "${iso_file_name}"
+	download_buzzheavier "${iso_download_url}" "${iso_file_name}"
 
 	# mount downloaded iso
 	mkdir iso_mount
@@ -1228,10 +1193,6 @@ download_windows() {
 
 	# DELETE CACHED PASSWORD
 	sudo sed -i '72d' /etc/sudoers
-}
-
-download_windows10() {
-	download_windows "windows10"
 }
 
 download_windows11() {
@@ -1353,6 +1314,115 @@ download() {
 
 	echo "❌ All download methods failed for: $url"
 	return 1
+}
+
+download_buzzheavier() {
+	local input_str="$1"
+	local output_path="$2"
+
+	if [[ -z "$input_str" ]]; then
+		echo "Usage: download_buzzheavier <id_or_url> [output_path/filename]"
+		return 1
+	fi
+
+	# 1. Resolve Initial URL
+	local url
+	if [[ "$input_str" == http* ]]; then
+		if [[ "$input_str" == *buzzheavier.com* || "$input_str" == *bzzhr.co* ||
+			"$input_str" == *fuckingfast.net* || "$input_str" == *fuckingfast.co* ]]; then
+			url="$input_str"
+		else
+			echo "Error: Domain not recognized: $input_str"
+			return 1
+		fi
+	elif [[ ${#input_str} -eq 12 ]]; then
+		url="https://buzzheavier.com/${input_str}"
+	else
+		echo "Error: Invalid input format: $input_str"
+		return 1
+	fi
+
+	echo "[INFO] Resolving direct link..."
+
+	# 2. Get HTMX Redirect (Direct Link) via Headers
+	# We perform a HEAD request to get the hx-redirect header.
+	local domain
+	domain=$(echo "$url" | awk -F/ '{print $3}')
+	local download_endpoint="${url}/download"
+
+	local hx_redirect
+	hx_redirect=$(curl -s -I -X HEAD \
+		-H "hx-current-url: $url" \
+		-H "hx-request: true" \
+		-H "referer: $url" \
+		"$download_endpoint" 2>/dev/null | grep -i '^hx-redirect:' | awk '{print $2}' | tr -d '\r')
+
+	if [[ -z "$hx_redirect" ]]; then
+		echo "Error: Download link not found. The file might be deleted or is a folder."
+		return 1
+	fi
+
+	# 3. Build Final URL
+	local final_url
+	if [[ "$hx_redirect" == /dl/* ]]; then
+		final_url="https://${domain}${hx_redirect}"
+	else
+		final_url="$hx_redirect"
+	fi
+
+	echo "[DEBUG] Direct link: $final_url"
+
+	# 4. Determine Output Filename and Directory
+	local final_filename
+	local final_dir="."
+
+	# Extract filename from URL (decoding %20, etc.)
+	local url_filename
+	url_filename=$(basename "$final_url")
+	# python one-liner to decode url encoded characters (e.g. %20 -> space)
+	if command -v python3 &>/dev/null; then
+		url_filename=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$url_filename")
+	fi
+
+	if [[ -z "$output_path" ]]; then
+		# No second arg: use current dir + URL filename
+		final_filename="$url_filename"
+	elif [[ -d "$output_path" ]]; then
+		# Second arg is a directory: use dir + URL filename
+		final_dir="${output_path%/}" # remove trailing slash if present
+		final_filename="$url_filename"
+	else
+		# Second arg is a file path: use it exactly as provided
+		final_dir=$(dirname "$output_path")
+		final_filename=$(basename "$output_path")
+	fi
+
+	local full_output_path="${final_dir}/${final_filename}"
+
+	# 5. Download (High Speed Logic)
+	echo "[INFO] Saving to: $full_output_path"
+
+	if command -v aria2c &>/dev/null; then
+		# method: aria2c (Multi-connection, usually maxes out bandwidth)
+		echo "[INFO] Using aria2c for accelerated download (16 connections)..."
+		aria2c -x 16 -s 16 -k 1M \
+			--dir="$final_dir" \
+			--out="$final_filename" \
+			--header="Referer: $url" \
+			"$final_url"
+	else
+		# fallback: curl
+		echo "[INFO] aria2c not found. Using curl (single connection)..."
+		echo "[TIP] Install 'aria2' for faster downloads."
+		curl -L --progress-bar -o "$full_output_path" "$final_url"
+	fi
+
+	if [[ $? -eq 0 ]]; then
+		echo "[SUCCESS] Download complete."
+	else
+		echo "[ERROR] Download failed."
+		return 1
+	fi
 }
 
 # Extract links html from html
