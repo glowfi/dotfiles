@@ -858,4 +858,5 @@ sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 + remove switch display shortcut Meta+P
 + remove dolphin shortcut Meta+E
 + check power mangement for sleep settings
++ recording shortcut remove
 ```
