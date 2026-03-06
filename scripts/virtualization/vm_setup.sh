@@ -154,21 +154,19 @@ addScripts() {
 
 		if [[ "$isWindows7" == "yes" || "$isWindows7" == "y" ]]; then
 			_iso_sharedfolder_string="-drive file=${name}.iso,media=cdrom \\
--drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw \\
-		"
+            -drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw"
 		else
 			### Copy virtio
 			cp -r "${VMS_ISO}/virtio.iso" "${VMS_PATH}/${name}"
 
 			_iso_sharedfolder_string="-drive file=${name}.iso,media=cdrom \\
-		-drive file=virtio.iso,media=cdrom \\
--drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw \\
-		"
+            -drive file=virtio.iso,media=cdrom \\
+            -drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw"
 		fi
 
 	else
 		_iso_sharedfolder_string="-drive media=cdrom,file=${name}.iso \\
-		-drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw" \\
+		-drive file=fat:rw:${VMS_PATH}/${name}/sharedFolder,format=raw"
 	fi
 
 	### Network Script
