@@ -859,4 +859,5 @@ sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 + remove dolphin shortcut Meta+E
 + check power mangement for sleep settings
 + recording shortcut remove
++ intall plasma video wallpaper and configure in appearance screen locking
 ```
