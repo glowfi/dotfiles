@@ -268,7 +268,7 @@ keybindings:
           fi
       fi
 
-  - name: Decrease Mic
+  - name: Decrease Mic Volume
     keys: super+f9
     interpreter: bash
     script: |
@@ -282,7 +282,7 @@ keybindings:
           notify-send "$MVOL [Mic]"
       fi
 
-  - name: Increase Mic
+  - name: Increase Mic Volume
     keys: super+f11
     interpreter: bash
     script: |
