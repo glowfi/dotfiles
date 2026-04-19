@@ -295,7 +295,7 @@ alias pdf='sed -i "35s/.*/fading = false;/" .config/picom/picom.conf'
 
 # Get public/private ip
 alias getpip="curl -sS https://ipleak.net | pup 'table tr td text{}' | xargs"
-alias getprip="ip addr | grep 'state UP' -A3 | tail -n2 | head -1 | awk '{print $2}' | cut -f1  -d'/' | tr -d 'inet ' |xargs"
+alias getprip="ip addr | grep 'state UP' -A6 | grep inet | head -1 | awk '{print \$2}'"
 
 # Miniconda activate/deactivate
 alias cac="test -e ~/.config/conda-activated && rm ~/.config/conda-activated && touch ~/.config/conda-activated && ~/miniconda3/bin/conda init fish && source ~/.config/fish/config.fish"
