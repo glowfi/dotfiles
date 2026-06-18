@@ -542,7 +542,7 @@ download_mandriva() {
 download_rocky() {
 	local url_page="https://rockylinux.org/download"
 	local html=$(curl -sSLf "$url_page")
-	local download_link=$(extract_links_from_html "${html}" | grep iso | grep -v -e "CHECKSUM" | uniq | fzf --cycle --prompt "Choose iso to download:")
+	local download_link=$(echo "${html}" | grep -oP 'https?://[^"]+' | grep iso | grep -v -e "CHECKSUM" | sed 's/\\$//' | uniq | fzf --cycle --prompt "Choose iso to download:")
 	local output_file="rocky.iso"
 	download "$download_link" "$output_file"
 }
