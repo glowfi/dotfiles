@@ -90,7 +90,7 @@ keybindings:
           ctl="loginctl"
       fi
       case "$(printf "Lock\nSleep\nReboot\nShutdown" | bemenu -p "Choose:" -i)" in
-      'Lock') qdbus6 org.freedesktop.ScreenSaver /ScreenSaver Lock ;;
+      'Lock') kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh" ;;
       'Sleep') "$ctl" suspend ;;
       'Reboot') "$ctl" reboot ;;
       'Shutdown') "$ctl" poweroff ;;
