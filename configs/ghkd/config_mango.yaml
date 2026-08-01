@@ -146,123 +146,42 @@ keybindings:
 
   - name: Increase Volume
     keys: super+f8
-    interpreter: bash
-    script: |
-      pamixer -i 5 --allow-boost
-      VOL=$(pamixer --get-volume)
-      STATE=$(pamixer --get-mute)
-      cap=100
-      if [ "$VOL" -gt "$cap" ]; then
-          notify-send "$VOL [Speaker]"
-      else
-          if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
-              notify-send "Volume on mute! [Speaker]"
-          else
-              notify-send "$VOL [Speaker]"
-          fi
-      fi
+    run: swayosd-client --output-volume +5 --max-volume 120
 
   - name: Decrease Volume
     keys: super+f7
-    interpreter: bash
-    script: |
-      pamixer -d 5 --allow-boost
-      VOL=$(pamixer --get-volume)
-      STATE=$(pamixer --get-mute)
-      cap=100
-      if [ "$VOL" -gt "$cap" ]; then
-          notify-send "$VOL [Speaker]"
-      else
-          if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
-              notify-send "Volume on mute! [Speaker]"
-          else
-              notify-send "$VOL [Speaker]"
-          fi
-      fi
+    run: swayosd-client --output-volume -5 --max-volume 120
 
   - name: Mute Volume
     keys: super+f6
-    interpreter: bash
-    script: |
-      VOL=$(pamixer --get-volume)
-      STATE=$(pamixer --get-mute)
-      pamixer -t
-      if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
-          notify-send "$VOL [Speaker]"
-      else
-          notify-send "Volume on mute! [Speaker]"
-      fi
+    run: swayosd-client --output-volume mute-toggle
 
   - name: Increase Brightness
     keys: super+f3
-    interpreter: bash
-    script: |
-      brightnessctl s 1000+
-      currBrightness=$(brightnessctl | head -2 | tail -1 | xargs | cut -d '(' -f2 | cut -d ')' -f1 | tr -d "%" | xargs)
-      cap=100
-      if [ "$currBrightness" -gt "$cap" ]; then
-          notify-send 100
-      else
-          if [ "$currBrightness" -eq 0 ]; then
-              notify-send "Zero Brightness!"
-          else
-              notify-send $currBrightness
-          fi
-      fi
+    run: swayosd-client --brightness raise
 
   - name: Decrease Brightness
     keys: super+f2
-    interpreter: bash
-    script: |
-      brightnessctl s 1000-
-      currBrightness=$(brightnessctl | head -2 | tail -1 | xargs | cut -d '(' -f2 | cut -d ')' -f1 | tr -d "%")
-      cap=100
-      if [ "$currBrightness" -gt "$cap" ]; then
-          notify-send 100
-      else
-          if [ "$currBrightness" -eq 0 ]; then
-              notify-send "Zero Brightness!"
-          else
-              notify-send $currBrightness
-          fi
-      fi
-
-  - name: Decrease Mic Volume
-    keys: super+f9
-    interpreter: bash
-    script: |
-      amixer -D pulse sset Capture 5%-
-      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
-      MSTATE=$(amixer get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
-      # Assuming VOL check in original was typo and meant MVOL logic
-      if [ "$MSTATE" = "true" ]; then
-          notify-send "Volume on mute! [Mic]"
-      else
-          notify-send "$MVOL [Mic]"
-      fi
+    run: swayosd-client --brightness lower
 
   - name: Increase Mic Volume
     keys: super+f11
-    interpreter: bash
-    script: |
-      amixer -D pulse sset Capture 5%+
-      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
-      MSTATE=$(amixer get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
-      if [ "$MSTATE" = "true" ]; then
-          notify-send "Volume on mute! [Mic]"
-      else
-          notify-send "$MVOL [Mic]"
-      fi
+    run: swayosd-client --input-volume +5
+
+  - name: Decrease Mic Volume
+    keys: super+f9
+    run: swayosd-client --input-volume -5
 
   - name: Mute Mic
-    keys: super+f10
+    keys: super+k
     interpreter: bash
     script: |
-      amixer -D pulse sset Capture toggle
-      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
-      MSTATE=$(amixer -D pulse get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
-      if [ "$MSTATE" = "[on]" ]; then
-          notify-send "$MVOL [Mic]"
+      pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+      if pactl get-source-mute @DEFAULT_SOURCE@ | grep -q 'yes'; then
+          swayosd-client --custom-message "Mic muted" \
+              --custom-icon microphone-sensitivity-muted-symbolic
       else
-          notify-send "Volume on mute! [Mic]"
+          swayosd-client --custom-message "Mic on" \
+              --custom-icon audio-input-microphone-symbolic
       fi

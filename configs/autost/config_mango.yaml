@@ -6,3 +6,4 @@ startup:
   - ghkd -b -c ~/.config/ghkd/config.yaml
   - wlsunset -t 4000 -T 4500
   - ~/.local/bin/wall.sh
+  - swayosd-server
