@@ -44,7 +44,7 @@ keybindings:
     interpreter: bash
     script: |
       favwall=$(printf "143.jpg\n40.png\n103.png" | shuf -n 1)
-      awww img "$favwall" --transition-type center --transition-fps 60 --transition-step 90
+      awww img "$HOME/wall/$favwall" --transition-type center --transition-fps 60 --transition-step 90
 
 
   # ============================================================
