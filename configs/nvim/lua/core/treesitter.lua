@@ -26,7 +26,7 @@ configs.setup({
 		"yaml",
 		"toml",
 		"markdown",
-		"latex",
+		-- "latex",
 		"dockerfile",
 		"csv",
 		"gomod",
