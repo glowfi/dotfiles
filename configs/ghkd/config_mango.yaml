@@ -1,0 +1,268 @@
+keybindings:
+  # ============================================================
+  # Simple
+  # ============================================================
+  - name: File Manager
+    keys: super+f
+    run: pcmanfm
+
+  - name: Reload Mango Config
+    keys: super+shift+q
+    run: mmsg dispatch reload_config
+
+  - name: Kill Window
+    keys: ctrl+shift+q
+    run: mmsg dispatch killclient
+
+  - name: Kill Mango
+    keys: ctrl+shift+q
+    run: mmsg dispatch quit
+
+  - name: Screenshot
+    keys: alt+a
+    interpreter: bash
+    run: ~/.local/bin/windowshot.sh
+
+  - name: clipmenu
+    keys: super+e
+    interpreter: bash
+    run: ~/.local/bin/clipmenu.sh
+
+  # ============================================================
+  # Complex Scripts
+  # ============================================================
+  
+  - name: Random Wallpaper
+    keys: super+z
+    interpreter: bash
+    script: |
+      randImage=$(fd . $HOME/wall/ --type file | shuf -n 1)
+      awww img "$randImage" --transition-type center --transition-fps 60 --transition-step 90
+
+  - name: Favourite Wallpaper
+    keys: super+c
+    interpreter: bash
+    script: |
+      favwall=$(printf "143.jpg\n40.png\n103.png" | shuf -n 1)
+      awww img "$favwall" --transition-type center --transition-fps 60 --transition-step 90
+
+
+  # ============================================================
+  # General Apps & Scripts
+  # ============================================================
+
+  - name: Terminal
+    keys: super+t
+    run: kitty
+
+  - name: Network Manager
+    keys: super+n
+    run: kitty -e "nmtui"
+
+  - name: Audio Mixer
+    keys: super+v
+    run: kitty -e "pulsemixer"
+
+  - name: App Launcher
+    keys: super+p
+    run: bemenu-run -p "Run:" -i
+
+  - name: Scrap YT
+    keys: super+y
+    run: fish -c 'sYT -p "bemenu"'
+
+  - name: Intelligent Tools
+    keys: alt+i
+    run: int.sh
+
+  - name: Kill Process
+    keys: alt+k
+    run: $HOME/.local/bin/killprocess.sh "unattended"
+
+  - name: Power Menu
+    keys: super+x
+    interpreter: bash
+    script: |
+      varInit=$(cat /proc/1/comm)
+      if [[ "$varInit" = "systemd" ]]; then
+          ctl="systemctl"
+      else
+          ctl="loginctl"
+      fi
+      case "$(printf "Lock\nSleep\nReboot\nShutdown" | bemenu -p "Choose:" -i)" in
+      'Lock') qdbus6 org.freedesktop.ScreenSaver /ScreenSaver Lock ;;
+      'Sleep') "$ctl" suspend ;;
+      'Reboot') "$ctl" reboot ;;
+      'Shutdown') "$ctl" poweroff ;;
+      *) exit 1 ;;
+      esac
+
+  - name: Browser Selector
+    keys: super+b
+    interpreter: bash
+    script: |
+      choice=$(echo -e "1.Default Profile[Brave]\n2.Temp Profile[Brave]\n3.Default Profile[Librewolf]" | bemenu -p "Choose Profile :" -i | awk -F"." '{print $1}')
+      if [[ "$choice" != "" ]]; then
+          if [[ "$choice" = "1" ]]; then
+              brave --profile-directory=Default
+          elif [[ "$choice" = "2" ]]; then
+              brave --profile-directory="Tmp"
+          elif [[ "$choice" = "3" ]]; then
+              $HOME/.local/bin/libw "librewolf:$(date +%s)" "default-default" "librewolf"
+          fi
+      fi
+
+  - name: Night Color
+    keys: super+r
+    interpreter: bash
+    script: |
+      if pkill -x wlsunset; then
+          notify-send "Night mode" "off"
+      else
+          setsid wlsunset -t 4000 -T 4500 >/dev/null 2>&1 &
+          notify-send "Night mode" "on"
+      fi
+
+  - name: EasyEffects Toggle
+    keys: alt+g
+    interpreter: bash
+    script: |
+      isRunning=$(ps aux | grep "easyeffects" | wc -lc | xargs | cut -d" " -f1)
+      if [[ "$isRunning" = "2" ]]; then
+          getProcess=$(ps aux | grep "easyeffects" | head -1)
+          pid=$(echo "$getProcess" | awk '{print $2}' | xargs)
+          kill -9 "$pid"
+          notify-send "Easyeffects Deactivated!"
+          rm nohup.out
+      else
+          nohup easyeffects --gapplication-service &
+          notify-send "Easyeffects Activated!"
+          rm $HOME/nohup.out
+      fi
+
+  # ============================================================
+  # Volume & Brightness
+  # ============================================================
+
+  - name: Increase Volume
+    keys: super+f8
+    interpreter: bash
+    script: |
+      pamixer -i 5 --allow-boost
+      VOL=$(pamixer --get-volume)
+      STATE=$(pamixer --get-mute)
+      cap=100
+      if [ "$VOL" -gt "$cap" ]; then
+          notify-send "$VOL [Speaker]"
+      else
+          if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
+              notify-send "Volume on mute! [Speaker]"
+          else
+              notify-send "$VOL [Speaker]"
+          fi
+      fi
+
+  - name: Decrease Volume
+    keys: super+f7
+    interpreter: bash
+    script: |
+      pamixer -d 5 --allow-boost
+      VOL=$(pamixer --get-volume)
+      STATE=$(pamixer --get-mute)
+      cap=100
+      if [ "$VOL" -gt "$cap" ]; then
+          notify-send "$VOL [Speaker]"
+      else
+          if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
+              notify-send "Volume on mute! [Speaker]"
+          else
+              notify-send "$VOL [Speaker]"
+          fi
+      fi
+
+  - name: Mute Volume
+    keys: super+f6
+    interpreter: bash
+    script: |
+      VOL=$(pamixer --get-volume)
+      STATE=$(pamixer --get-mute)
+      pamixer -t
+      if [ "$STATE" = "true" ] || [ "$VOL" -eq 0 ]; then
+          notify-send "$VOL [Speaker]"
+      else
+          notify-send "Volume on mute! [Speaker]"
+      fi
+
+  - name: Increase Brightness
+    keys: super+f3
+    interpreter: bash
+    script: |
+      brightnessctl s 1000+
+      currBrightness=$(brightnessctl | head -2 | tail -1 | xargs | cut -d '(' -f2 | cut -d ')' -f1 | tr -d "%" | xargs)
+      cap=100
+      if [ "$currBrightness" -gt "$cap" ]; then
+          notify-send 100
+      else
+          if [ "$currBrightness" -eq 0 ]; then
+              notify-send "Zero Brightness!"
+          else
+              notify-send $currBrightness
+          fi
+      fi
+
+  - name: Decrease Brightness
+    keys: super+f2
+    interpreter: bash
+    script: |
+      brightnessctl s 1000-
+      currBrightness=$(brightnessctl | head -2 | tail -1 | xargs | cut -d '(' -f2 | cut -d ')' -f1 | tr -d "%")
+      cap=100
+      if [ "$currBrightness" -gt "$cap" ]; then
+          notify-send 100
+      else
+          if [ "$currBrightness" -eq 0 ]; then
+              notify-send "Zero Brightness!"
+          else
+              notify-send $currBrightness
+          fi
+      fi
+
+  - name: Decrease Mic Volume
+    keys: super+f9
+    interpreter: bash
+    script: |
+      amixer -D pulse sset Capture 5%-
+      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
+      MSTATE=$(amixer get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
+      # Assuming VOL check in original was typo and meant MVOL logic
+      if [ "$MSTATE" = "true" ]; then
+          notify-send "Volume on mute! [Mic]"
+      else
+          notify-send "$MVOL [Mic]"
+      fi
+
+  - name: Increase Mic Volume
+    keys: super+f11
+    interpreter: bash
+    script: |
+      amixer -D pulse sset Capture 5%+
+      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
+      MSTATE=$(amixer get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
+      if [ "$MSTATE" = "true" ]; then
+          notify-send "Volume on mute! [Mic]"
+      else
+          notify-send "$MVOL [Mic]"
+      fi
+
+  - name: Mute Mic
+    keys: super+f10
+    interpreter: bash
+    script: |
+      amixer -D pulse sset Capture toggle
+      MVOL=$(amixer -D pulse sget Capture | grep 'Left:' | awk -F'[][]' '{ print $2 }')
+      MSTATE=$(amixer -D pulse get Capture | sed 5q | tail -1 | awk -F " " '{print $NF}')
+      if [ "$MSTATE" = "[on]" ]; then
+          notify-send "$MVOL [Mic]"
+      else
+          notify-send "Volume on mute! [Mic]"
+      fi
