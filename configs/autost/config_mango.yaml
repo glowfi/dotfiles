@@ -8,3 +8,4 @@ startup:
   - ~/.local/bin/wall.sh
   - swayosd-server
   - swayidle -w timeout 300 'kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh"'
+  - poweralertd -S
