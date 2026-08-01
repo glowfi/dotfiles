@@ -15,7 +15,7 @@ keybindings:
     run: mmsg dispatch killclient
 
   - name: Kill Mango
-    keys: ctrl+shift+q
+    keys: alt+q
     run: mmsg dispatch quit
 
   - name: Screenshot
