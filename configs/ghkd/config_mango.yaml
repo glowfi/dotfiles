@@ -173,7 +173,7 @@ keybindings:
     run: swayosd-client --input-volume -5
 
   - name: Mute Mic
-    keys: super+k
+    keys: super+f10
     interpreter: bash
     script: |
       pactl set-source-mute @DEFAULT_SOURCE@ toggle
