@@ -117,10 +117,10 @@ keybindings:
     interpreter: bash
     script: |
       if pkill -x wlsunset; then
-          notify-send "Night mode" "off"
+          swayosd-client --custom-message "Night mode off" --custom-icon weather-clear-symbolic
       else
           setsid wlsunset -t 4000 -T 4500 >/dev/null 2>&1 &
-          notify-send "Night mode" "on"
+          swayosd-client --custom-message "Night mode on" --custom-icon weather-clear-night-symbolic
       fi
 
   - name: EasyEffects Toggle
