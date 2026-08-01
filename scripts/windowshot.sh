@@ -1,57 +1,51 @@
 #!/bin/sh
 
 print_date() {
-	date "+%e %B %Y %-I:%M:%S.%3N" | tr " " "-"
+	d=$(date +%-d)
+	case "$d" in
+	11 | 12 | 13) suf="th" ;;
+	*1) suf="st" ;;
+	*2) suf="nd" ;;
+	*3) suf="rd" ;;
+	*) suf="th" ;;
+	esac
+	date "+${d}${suf}-%B-%Y-%H:%M:%S.%3N"
 }
 
 SCREENSHOTDIR="${HOME}/Pictures/ScreenShots"
 SCREENSHOTNAME="${SCREENSHOTDIR}/$(print_date).png"
-
-note() {
-	notify-send "screenshot name ${SCREENSHOTNAME}"
-}
-
 mkdir -p "${SCREENSHOTDIR}"
 
 _end() {
-	note
-	xdg-open "${SCREENSHOTNAME}"
-	xclip -selection clipboard -t image/png -i "${SCREENSHOTNAME}"
+	notify-send "screenshot name ${SCREENSHOTNAME}"
+	wl-copy -t image/png <"${SCREENSHOTNAME}"
 	exit 0
 }
 
 region() {
-	killall unclutter
-	import "${SCREENSHOTNAME}"
-	setsid unclutter &
-	_end
-}
-window() {
-	import -window "$(xprop -root | awk '/_NET_ACTIVE_WINDOW\(WINDOW\)/{print $NF}')" "${SCREENSHOTNAME}"
-	_end
-}
-root() {
-	import -window root "${SCREENSHOTNAME}"
+	geom="$(slurp)" || exit 1 # user pressed Esc
+	grim -g "$geom" "${SCREENSHOTNAME}"
 	_end
 }
 
-# Default Prompt For Selection
+root() {
+	grim "${SCREENSHOTNAME}"
+	_end
+}
+
 prompter() {
-	case "$(printf 'a selected area\ncurrent window\nfull screen' | bemenu -l 6 -i -p 'Screenshot which area?')" in
+	case "$(printf 'a selected area\nfull screen' | bemenu -l 6 -i -p 'Screenshot which area?')" in
 	"a selected area") region ;;
-	"current window") window ;;
 	"full screen") root ;;
 	*) exit ;;
 	esac
-	_end
 }
 
-while getopts cwr: o; do
+while getopts cwr o; do
 	case "$o" in
 	c) region ;;
-	w) window ;;
 	r) root ;;
-	\?) printf 'Invalid option: -%s\n' "${o}" && exit ;;
+	\?) printf 'Invalid option: -%s\n' "${o}" && exit 1 ;;
 	esac
 done
 prompter
