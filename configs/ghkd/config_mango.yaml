@@ -37,14 +37,14 @@ keybindings:
     interpreter: bash
     script: |
       randImage=$(fd . $HOME/wall/ --type file | shuf -n 1)
-      awww img "$randImage" --transition-type center --transition-fps 60 --transition-step 90
+      awww img "$randImage" --transition-type wipe --transition-fps 60 --transition-step 90
 
   - name: Favourite Wallpaper
     keys: super+c
     interpreter: bash
     script: |
       favwall=$(printf "143.jpg\n40.png\n103.png" | shuf -n 1)
-      awww img "$HOME/wall/$favwall" --transition-type center --transition-fps 60 --transition-step 90
+      awww img "$HOME/wall/$favwall" --transition-type wipe --transition-fps 60 --transition-step 90
 
 
   # ============================================================
