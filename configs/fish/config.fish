@@ -572,9 +572,9 @@ function _mirru
         sudo pacman -Syyy
     else
         sudo rm -rf /var/lib/pacman/db.lck
-        sudo reflector --verbose -c DE --latest 5 --age 2 --fastest 5 --protocol https --sort rate --save /etc/pacman.d/mirrorlist-arch
+        set mirrors1 (rate-mirrors --protocol https --disable-comments-in-file arch) && test -z (echo "$mirrors") && echo "$mirrors" | sudo tee /etc/pacman.d/mirrorlist-arch
         echo -e "\nSyncing repos of artix. Please wait this may take some time ..."
-        set mirrors (rate-mirrors --protocol https --disable-comments-in-file artix) && test -z (echo "$mirrors") && echo "$mirrors" | sudo tee /etc/pacman.d/mirrorlist
+        set mirrors2 (rate-mirrors --protocol https --disable-comments-in-file artix) && test -z (echo "$mirrors") && echo "$mirrors" | sudo tee /etc/pacman.d/mirrorlist
         sudo pacman -Syyy
     end
 end
