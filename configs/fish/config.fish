@@ -87,8 +87,8 @@ end
 #                        Aliases
 # ===================================================================
 
-# Changing ls to exa
-alias ls='exa --icons -l --color=always --group-directories-first -F'
+# Changing ls to eza
+alias ls='eza --icons -l --color=always --group-directories-first -F always'
 
 # Changing cat to bat
 alias cat="bat -p --theme=$BAT_THEME"
