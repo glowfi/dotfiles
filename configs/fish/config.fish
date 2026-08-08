@@ -987,6 +987,16 @@ export NNN_FCOLORS='c1e20406006033f7c6d6abc4'
 export NNN_FIFO='/tmp/nnn.fifo'
 export NNN_TRASH=1
 
+# Bemenu
+export BEMENU_OPTS='-i -l 15 -c -W 0.5 -B 2 -H 28 -R 8 --fn "monospace 12" \
+--tb #282828 --tf #fabd2f \
+--fb #282828 --ff #ebdbb2 \
+--nb #282828 --nf #a89984 \
+--hb #3c3836 --hf #fabd2f \
+--sb #504945 --sf #fe8019 \
+--ab #282828 --af #928374 \
+--bdr #d79921'
+
 # MPV
 export MPV_SOURCE=(which mpv)
 
