@@ -800,6 +800,16 @@ sed -i 's/#define FIBONACCI_SPIRAL_LAYOUT 0/#define FIBONACCI_SPIRAL_LAYOUT 1/g'
 - envs
 - fzf
 
+# Remove gcr prompter
+
+```sh
+mkdir -p ~/.local/share/dbus-1/services
+for s in org.gnome.keyring.SystemPrompter org.gnome.keyring.PrivatePrompter; do
+	printf '[D-BUS Service]\nName=%s\nExec=/usr/bin/false\n' "$s" \
+		> ~/.local/share/dbus-1/services/$s.service
+done
+```
+
 ### KROHNKITE
 
 ```sh
