@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-randImage=$(fd . $HOME/wall/ --type file | shuf -n 1)
-dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript "string:
+while true; do
+	randImage=$(fd . $HOME/wall/ --type file | shuf -n 1)
+	dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript "string:
       var Desktops = desktops();                                                                                                                       
       for (i=0;i<Desktops.length;i++) {
               d = Desktops[i];
@@ -11,3 +12,5 @@ dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell o
                                           'General');
               d.writeConfig('Image', '$randImage');
       }"
+	sleep 600
+done
