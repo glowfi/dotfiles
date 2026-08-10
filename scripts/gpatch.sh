@@ -61,3 +61,12 @@ for i in {1..5}; do sudo pacman -S --noconfirm gamemode && break || sleep 1; don
 
 # cp -r $HOME/setup/scripts/misc/saveScraper.py $HOME/.local/bin/
 # chmod +x $HOME/.local/bin/saveScraper.py
+
+### Gamescoped steam
+
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/steamg << 'EOF'
+#!/usr/bin/env bash
+exec gamescope -W 1920 -H 1080 -r 144 -e -f -- steam "$@"
+EOF
+chmod +x ~/.local/bin/steamg
