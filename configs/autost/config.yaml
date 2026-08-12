@@ -3,4 +3,3 @@ interpreter: /bin/sh
 startup:
   - ghkd -b -c ~/.config/ghkd/config.yaml
   - ~/.local/bin/wall.sh
-  - qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut "Toggle Night Color"
