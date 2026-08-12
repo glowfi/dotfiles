@@ -196,9 +196,6 @@ printf "Cleaned Cache!\n";
 sudo pacman -Rns (pacman -Qtdq);
 yes | printf "Cleaned Orphans!"'
 
-# DWM compile
-alias dwc="make clean;make"
-
 # Find files in current location and open in editor
 alias sf="searchFilesCurrent"
 alias sfh="searchFilesCurrent h"
@@ -501,14 +498,12 @@ function micVOl
     if test -z $argv[1]
         bash -c "while :
         do amixer -D pulse sset Capture 30000
-        pkill -RTMIN+10 dwmblocks
         sleep 1
         done" >/dev/null
     else
 
         bash -c "while :
         do amixer -D pulse sset Capture $argv[1]
-        pkill -RTMIN+10 dwmblocks
         sleep 1
         done" >/dev/null
     end
@@ -758,7 +753,7 @@ end
 function chooseTheme
     set choosen (printf "simple\nclassic\nminimal" | fzf)
     if test "$checkOS" = Linux
-        sed -i "944/.*/ $choosen/" ~/.config/fish/config.fish && source ~/.config/fish/config.fish
+        sed -i "939/.*/ $choosen/" ~/.config/fish/config.fish && source ~/.config/fish/config.fish
     end
 end
 
