@@ -988,7 +988,7 @@ export NNN_FIFO='/tmp/nnn.fifo'
 export NNN_TRASH=1
 
 # Bemenu
-export BEMENU_OPTS='-i -l 15 -H 28 -W 0.9 -B 2 -c -w --scrollbar autohide \
+export BEMENU_OPTS='-i -l 15 -B 2 -c -w \
 --fb "#282828" --ff "#ebdbb2" \
 --nb "#282828" --nf "#ebdbb2" \
 --tb "#282828" --tf "#fb4934" \
