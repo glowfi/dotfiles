@@ -859,15 +859,19 @@ sudo -u "$USER" kwriteconfig6 --file kwinrc --group NightColor --key Mode Consta
 
 sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 
-+ Add virtual desktop
-+ Add Keyboard open terminal here shortcut
-+ install resouce monitor
-+ make sure toggle tiling is working
-+ check autostart works
-+ nightlight feature check
+
++ make virtual desktop as dekstop number
++ configure resouce monitor
+
 + remove switch display shortcut Meta+P
 + remove dolphin shortcut Meta+E
++ recording shortcut remove Meta+R
+
++ make sure toggle tiling is working
++ check autostart works
+
++ nightlight feature check
 + check power mangement for sleep settings
-+ recording shortcut remove
+
 + intall plasma video wallpaper and configure in appearance screen locking
 ```
