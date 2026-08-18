@@ -23,6 +23,8 @@ set -x PATH $PATH $GOPATH/bin # Set golang binary path
 set PATH ~/.local/bin/clangd/bin $PATH # Sets clangd path
 set PATH ~/.cargo/bin/ $PATH # Sets rust path
 
+set -g runningOS (uname -s)
+
 ## THEME
 
 set FISH_THEME (echo "gruvbox") # gruvbox
@@ -65,23 +67,6 @@ end
 ## Enhancements
 set fish_greeting # Supresses fish's greeting message
 set TERM xterm-256color # Sets the terminal type
-
-# Start X at login
-set otherOS (uname -a | grep -Eoi "Android"|head -1)
-if test "$otherOS" = Android
-    true
-else
-    set checkOS (uname -a | grep -Eoi "Linux"|head -1)
-    if test "$checkOS" = Linux
-        if status --is-login
-            if test -z "$DISPLAY" -a $XDG_VTNR = 1
-                exec startx -- -keeptty
-            end
-        end
-    else
-        true
-    end
-end
 
 # ===================================================================
 #                        Aliases
@@ -448,7 +433,7 @@ end
 
 # Jump to Mounted drive
 function gotoMounteddrive
-    if test "$checkOS" = Linux
+    if test "$runningOS" = Linux
         set choice0 (echo "")
         set choice1 (echo "")
 
@@ -751,9 +736,10 @@ end
 # ===================================================================
 
 function chooseTheme
-    set choosen (printf "simple\nclassic\nminimal" | fzf)
-    if test "$checkOS" = Linux
-        sed -i "939/.*/ $choosen/" ~/.config/fish/config.fish && source ~/.config/fish/config.fish
+    set chosen (printf "simple\nclassic\nminimal" | fzf)
+    if test -n "$chosen"; and test "$runningOS" = Linux
+        sed -i "925s/.*/$chosen/" ~/.config/fish/config.fish
+        source ~/.config/fish/config.fish
     end
 end
 
