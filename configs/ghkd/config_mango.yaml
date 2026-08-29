@@ -1,0 +1,205 @@
+keybindings:
+  # ============================================================
+  # Simple
+  # ============================================================
+  - name: File Manager
+    keys: super+f
+    run: pcmanfm
+
+  - name: Reload Mango Config
+    keys: super+shift+q
+    run: mmsg dispatch reload_config
+
+  - name: Kill Window
+    keys: ctrl+shift+q
+    run: mmsg dispatch killclient
+
+  - name: Kill Mango
+    keys: alt+q
+    run: mmsg dispatch quit
+
+  - name: Screenshot
+    keys: alt+a
+    interpreter: bash
+    run: ~/.local/bin/windowshot.sh
+
+  - name: clipmenu
+    keys: super+e
+    interpreter: bash
+    run: ~/.local/bin/clipmenu.sh
+
+  # ============================================================
+  # Complex Scripts
+  # ============================================================
+  
+  - name: Random Wallpaper
+    keys: super+z
+    interpreter: bash
+    script: |
+      randImage=$(fd . $HOME/wall/ --type file | shuf -n 1)
+      awww img "$randImage" --transition-type center --transition-fps 60 --transition-step 90
+
+  - name: Favourite Wallpaper
+    keys: super+c
+    interpreter: bash
+    script: |
+      favwall=$(printf "143.jpg\n40.png\n103.png" | shuf -n 1)
+      awww img "$HOME/wall/$favwall" --transition-type center --transition-fps 60 --transition-step 90
+
+  - name: Cycle Power Profile
+    keys: super+f1
+    interpreter: bash
+    script: |
+      cur=$(powerprofilesctl get)
+      case "$cur" in
+        power-saver) next=balanced ;;
+        balanced) next=performance ;;
+        *) next=power-saver ;;
+      esac
+      powerprofilesctl set "$next"
+      swayosd-client --custom-message "Profile: $next"
+
+
+  # ============================================================
+  # General Apps & Scripts
+  # ============================================================
+
+  - name: Terminal
+    keys: super+t
+    run: kitty
+
+  - name: Network Manager
+    keys: super+n
+    run: kitty -e "nmtui"
+
+  - name: Audio Mixer
+    keys: super+v
+    run: kitty -e "pulsemixer"
+
+  - name: App Launcher
+    keys: super+p
+    run: bemenu-run -p "Run:" -i
+
+  - name: Scrap YT
+    keys: super+y
+    run: fish -c 'sYT -p "bemenu"'
+
+  - name: Intelligent Tools
+    keys: alt+i
+    run: int.sh
+
+  - name: Kill Process
+    keys: alt+k
+    run: $HOME/.local/bin/killprocess.sh "unattended"
+
+  - name: Power Menu
+    keys: super+x
+    interpreter: bash
+    script: |
+      varInit=$(cat /proc/1/comm)
+      if [[ "$varInit" = "systemd" ]]; then
+          ctl="systemctl"
+      else
+          ctl="loginctl"
+      fi
+      case "$(printf "Lock\nSleep\nReboot\nShutdown" | bemenu -p "Choose:" -i)" in
+      'Lock') kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh" ;;
+      'Sleep') "$ctl" suspend ;;
+      'Reboot') "$ctl" reboot ;;
+      'Shutdown') "$ctl" poweroff ;;
+      *) exit 1 ;;
+      esac
+
+  - name: Browser Selector
+    keys: super+b
+    interpreter: bash
+    script: |
+      choice=$(echo -e "1.Default Profile[Brave]\n2.Temp Profile[Brave]\n3.Default Profile[Librewolf]" | bemenu -p "Choose Profile :" -i | awk -F"." '{print $1}')
+      if [[ "$choice" != "" ]]; then
+          if [[ "$choice" = "1" ]]; then
+              brave --profile-directory=Default
+          elif [[ "$choice" = "2" ]]; then
+              brave --profile-directory="Tmp"
+          elif [[ "$choice" = "3" ]]; then
+              $HOME/.local/bin/libw "librewolf:$(date +%s)" "default-default" "librewolf"
+          fi
+      fi
+
+  - name: Night Color
+    keys: super+r
+    interpreter: bash
+    script: |
+      STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nightlight"
+      mkdir -p "${STATE%/*}"
+      if [ -e "$STATE" ]; then
+          rm -f "$STATE"
+          pkill -x wlsunset
+          swayosd-client --custom-message "Night mode off" --custom-icon weather-clear-symbolic
+      else
+          touch "$STATE"
+          setsid wlsunset -t 4000 -T 4001 >/dev/null 2>&1 &
+          swayosd-client --custom-message "Night mode on" --custom-icon weather-clear-night-symbolic
+      fi
+
+  - name: EasyEffects Toggle
+    keys: alt+g
+    interpreter: bash
+    script: |
+      isRunning=$(ps aux | grep "easyeffects" | wc -lc | xargs | cut -d" " -f1)
+      if [[ "$isRunning" = "2" ]]; then
+          getProcess=$(ps aux | grep "easyeffects" | head -1)
+          pid=$(echo "$getProcess" | awk '{print $2}' | xargs)
+          kill -9 "$pid"
+          notify-send "Easyeffects Deactivated!"
+          rm nohup.out
+      else
+          nohup easyeffects --gapplication-service &
+          notify-send "Easyeffects Activated!"
+          rm $HOME/nohup.out
+      fi
+
+  # ============================================================
+  # Volume & Brightness
+  # ============================================================
+
+  - name: Increase Volume
+    keys: super+f8
+    run: swayosd-client --output-volume +5 --max-volume 120
+
+  - name: Decrease Volume
+    keys: super+f7
+    run: swayosd-client --output-volume -5 --max-volume 120
+
+  - name: Mute Volume
+    keys: super+f6
+    run: swayosd-client --output-volume mute-toggle
+
+  - name: Increase Brightness
+    keys: super+f3
+    run: swayosd-client --brightness raise
+
+  - name: Decrease Brightness
+    keys: super+f2
+    run: swayosd-client --brightness lower
+
+  - name: Increase Mic Volume
+    keys: super+f11
+    run: swayosd-client --input-volume +5
+
+  - name: Decrease Mic Volume
+    keys: super+f9
+    run: swayosd-client --input-volume -5
+
+  - name: Mute Mic
+    keys: super+f10
+    interpreter: bash
+    script: |
+      pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+      if pactl get-source-mute @DEFAULT_SOURCE@ | grep -q 'yes'; then
+          swayosd-client --custom-message "Mic muted" \
+              --custom-icon microphone-sensitivity-muted-symbolic
+      else
+          swayosd-client --custom-message "Mic on" \
+              --custom-icon audio-input-microphone-symbolic
+      fi
