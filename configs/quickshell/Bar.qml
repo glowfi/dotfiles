@@ -13,6 +13,7 @@ import "modules/taskbar"
 import "modules/media"
 import "modules/tray"
 import "modules/sysmon"
+import "modules/gpu"
 import "modules/network"
 import "modules/bluetooth"
 import "modules/audio"
@@ -60,12 +61,13 @@ Scope {
         // ---- popup management: one open at a time ----
         readonly property var allPopups: [
             launcherPopup, layoutPopup, wifiPopup, btPopup, audioPopup,
-            displayPopup, batteryPopup, sysPopup, notifPopup, clipPopup,
-            calPopup, powerPopup, trayMenuPopup]
+            displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
+            clipPopup, calPopup, powerPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
             launcherPopup.visible || layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
-            || batteryPopup.visible || sysPopup.visible || notifPopup.visible
+            || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
+            || notifPopup.visible
             || clipPopup.visible || calPopup.visible || powerPopup.visible
             || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
@@ -133,6 +135,7 @@ Scope {
             }
 
             SysChip { bar: bar; popup: sysPopup }
+            GpuPill { bar: bar; popup: gpuPopup }
             WifiPill { bar: bar; popup: wifiPopup }
             BtPill { bar: bar; popup: btPopup }
             AudioPill { bar: bar; popup: audioPopup }
@@ -180,6 +183,7 @@ Scope {
         DisplayPopup { id: displayPopup; bar: bar }
         BatteryPopup { id: batteryPopup; bar: bar }
         SysPopup { id: sysPopup; bar: bar }
+        GpuPopup { id: gpuPopup; bar: bar }
         NotifCenter { id: notifPopup; bar: bar }
         ClipPopup { id: clipPopup; bar: bar }
         CalendarPopup { id: calPopup; bar: bar }
