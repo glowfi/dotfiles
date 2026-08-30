@@ -1,11 +1,12 @@
 interpreter: /bin/sh
 
 startup:
-  - mbar
+  - quickshell
   - awww-daemon
   - ghkd -b -c ~/.config/ghkd/config.yaml
   - wlsunset -t 4000 -T 4500
+  - wl-paste --watch cliphist store
   - ~/.local/bin/wall.sh
   - swayosd-server
-  - swayidle -w timeout 300 'kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh"'
+  - swayidle -w timeout 300 'kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh"' timeout 600 '[ "$(cat /proc/1/comm)" = systemd ] && ctl=systemctl || ctl=loginctl; grep -q 0 /sys/class/power_supply/A*/online 2>/dev/null && $ctl suspend'
   - poweralertd -S
