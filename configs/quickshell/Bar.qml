@@ -158,7 +158,10 @@ Scope {
                 fgColor: Theme.fg0
                 onClicked: {
                     bar.togglePopup(clipPopup);
-                    if (clipPopup.visible) Clip.refreshClip();
+                    if (clipPopup.visible) {
+                        Clip.refreshClip();
+                        clipPopup.focusSearch();
+                    }
                 }
             }
             BarButton {   // clock -> modules/calendar
