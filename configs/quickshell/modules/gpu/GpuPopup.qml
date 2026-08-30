@@ -77,8 +77,8 @@ PanelWindow {
                     pct: gpuEntry.modelData.vramTotal > 0
                          ? 100 * gpuEntry.modelData.vramUsed / gpuEntry.modelData.vramTotal : 0
                     barColor: Theme.purple
-                    detail: gpuEntry.modelData.vramUsed.toFixed(1) + "G / "
-                            + gpuEntry.modelData.vramTotal.toFixed(1) + "G"
+                    detail: Gpu.fmtG(gpuEntry.modelData.vramUsed) + " / "
+                            + Gpu.fmtG(gpuEntry.modelData.vramTotal)
                 }
             }
         }

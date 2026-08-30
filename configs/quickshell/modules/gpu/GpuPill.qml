@@ -14,7 +14,7 @@ StatusPill {
         const g = Gpu.sel;
         if (!g) return "";
         const stat = g.vramTotal > 0
-                     ? g.vramUsed.toFixed(1) + "/" + g.vramTotal.toFixed(0) + "G"
+                     ? Gpu.fmtG(g.vramUsed) + "/" + Gpu.fmtG(g.vramTotal)
                      : (g.busy >= 0 ? g.busy + "%" : "--");
         return stat + (Gpu.gpus.length > 1 ? " · " + Gpu.vendorName(g.vendor) : "");
     }
