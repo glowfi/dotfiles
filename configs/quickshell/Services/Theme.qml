@@ -25,7 +25,7 @@ Singleton {
     readonly property color orange: "#fe8019"
 
     readonly property string fontFamily: "Fantasque Sans Mono"
-    property int fontSize: 17
+    property int fontSize: 15
     readonly property int iconSize: fontSize + 9
 
     function setFontSize(v) {
