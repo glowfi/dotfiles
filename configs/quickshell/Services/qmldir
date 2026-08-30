@@ -1,0 +1,12 @@
+singleton Theme Theme.qml
+singleton Clock Clock.qml
+singleton Mango Mango.qml
+singleton Net Net.qml
+singleton DisplayCtl DisplayCtl.qml
+singleton SysMon SysMon.qml
+singleton BatteryInfo BatteryInfo.qml
+singleton Clip Clip.qml
+singleton Rec Rec.qml
+singleton MediaSvc MediaSvc.qml
+singleton NotifSvc NotifSvc.qml
+singleton OsdSvc OsdSvc.qml
