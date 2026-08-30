@@ -13,8 +13,10 @@ StatusPill {
     value: {
         const g = Gpu.sel;
         if (!g) return "";
-        return (g.busy >= 0 ? g.busy + "%" : "--")
-             + (Gpu.gpus.length > 1 ? " · " + Gpu.vendorName(g.vendor) : "");
+        const stat = g.vramTotal > 0
+                     ? g.vramUsed.toFixed(1) + "/" + g.vramTotal.toFixed(0) + "G"
+                     : (g.busy >= 0 ? g.busy + "%" : "--");
+        return stat + (Gpu.gpus.length > 1 ? " · " + Gpu.vendorName(g.vendor) : "");
     }
     tooltip: "gpu — click for details" + (Gpu.gpus.length > 1 ? " & switching" : "")
     onClicked: bar.togglePopupAt(popup, gpuPill)

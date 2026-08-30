@@ -72,14 +72,19 @@ Scope {
             || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
         function closeAllPopups() {
-            for (const o of allPopups) o.visible = false;
+            // defensive: one failed-to-load popup must not brick every click
+            for (const o of allPopups) {
+                if (o) { try { o.visible = false; } catch (e) {} }
+            }
         }
         function togglePopup(p) {
+            if (!p) { console.warn("togglePopup: popup failed to load"); return; }
             const wasOpen = p.visible;
             closeAllPopups();
             p.visible = !wasOpen;
         }
         function togglePopupAt(p, item) {
+            if (!p || !item) { console.warn("togglePopupAt: missing popup/item"); return; }
             const x = item.mapToItem(null, 0, 0).x;
             p.margins.left = Math.max(8, Math.min(x, bar.width - p.implicitWidth - 8));
             togglePopup(p);
