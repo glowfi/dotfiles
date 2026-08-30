@@ -8,5 +8,5 @@ startup:
   - wl-paste --watch cliphist store
   - ~/.local/bin/wall.sh
   - swayosd-server
-  - swayidle -w timeout 300 'kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh"' timeout 600 '[ "$(cat /proc/1/comm)" = systemd ] && ctl=systemctl || ctl=loginctl; grep -q 0 /sys/class/power_supply/A*/online 2>/dev/null && $ctl suspend'
+  - swayidle -w timeout 300 'kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh" &' timeout 600 '[ "$(cat /proc/1/comm)" = systemd ] && ctl=systemctl || ctl=loginctl; $ctl suspend'
   - poweralertd -S
