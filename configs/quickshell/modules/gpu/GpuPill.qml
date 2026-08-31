@@ -9,6 +9,7 @@ StatusPill {
 
     visible: Gpu.gpus.length > 0
     icon: "󰢮"
+    iconPx: Theme.iconSize + 3   // this glyph renders visually smaller than peers
     iconColor: Theme.fg0
     value: {
         const g = Gpu.sel;

@@ -8,6 +8,5 @@ singleton MediaSvc MediaSvc.qml
 singleton Net Net.qml
 singleton NotifSvc NotifSvc.qml
 singleton OsdSvc OsdSvc.qml
-singleton Rec Rec.qml
 singleton SysMon SysMon.qml
 singleton Theme Theme.qml

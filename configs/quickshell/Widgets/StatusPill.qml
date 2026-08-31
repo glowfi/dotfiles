@@ -8,6 +8,7 @@ Rectangle {
     property string value
     property color iconColor: Theme.fg0
     property int maxValueWidth: 400
+    property int iconPx: Theme.iconSize - 2
     property string tooltip: ""
     signal clicked()
     signal rightClicked()
@@ -23,7 +24,7 @@ Rectangle {
         Text {
             text: parent.parent.icon
             color: parent.parent.iconColor
-            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.iconSize - 2 }
+            font { family: Theme.fontFamily; bold: true; pixelSize: parent.parent.iconPx }
         }
         Text {
             text: parent.parent.value

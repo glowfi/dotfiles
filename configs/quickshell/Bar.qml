@@ -21,7 +21,6 @@ import "modules/battery"
 import "modules/notifications"
 import "modules/clipboard"
 import "modules/calendar"
-import "modules/power"
 
 Scope {
     id: perScreen
@@ -59,13 +58,13 @@ Scope {
         readonly property var allPopups: [
             layoutPopup, wifiPopup, btPopup, audioPopup,
             displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
-            clipPopup, calPopup, powerPopup, trayMenuPopup]
+            clipPopup, calPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
             layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
             || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
             || notifPopup.visible
-            || clipPopup.visible || calPopup.visible || powerPopup.visible
+            || clipPopup.visible || calPopup.visible
             || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
         function closeAllPopups() {
@@ -95,6 +94,7 @@ Scope {
             anchors.rightMargin: 8
             spacing: 8
 
+            // -------- left cluster --------
             Tags { bar: bar }
 
             BarButton {   // layout -> modules/layouts
@@ -106,25 +106,32 @@ Scope {
                 onMiddleClicked: Mango.dispatch("togglefloating")
             }
 
-            Item { Layout.fillWidth: true }   // spacer (taskbar removed)
             MediaBar {}
-            Tray { bar: bar; menuPopup: trayMenuPopup }
 
-            BarButton {   // recording indicator -> Services/Rec
-                visible: Rec.recActive
-                text: "󰻂"
-                px: Theme.iconSize
-                fgColor: Theme.red
-                tooltip: "recording — click to stop"
-                onClicked: Rec.stopRecording()
-            }
+            Item { Layout.fillWidth: true }   // spacer
 
+            // -------- right cluster --------
             SysChip { bar: bar; popup: sysPopup }
             GpuPill { bar: bar; popup: gpuPopup }
-            WifiPill { bar: bar; popup: wifiPopup }
-            BtPill { bar: bar; popup: btPopup }
+            Tray { bar: bar; menuPopup: trayMenuPopup }
+
+            BarButton {   // clipboard -> modules/clipboard
+                text: "󰅍"
+                px: Theme.iconSize
+                fgColor: Theme.fg0
+                onClicked: {
+                    bar.togglePopup(clipPopup);
+                    if (clipPopup.visible) {
+                        Clip.refreshClip();
+                        clipPopup.focusSearch();
+                    }
+                }
+            }
+
             AudioPill { bar: bar; popup: audioPopup }
+            BtPill { bar: bar; popup: btPopup }
             DisplayPill { bar: bar; popup: displayPopup }
+            WifiPill { bar: bar; popup: wifiPopup }
             BatteryPill { bar: bar; popup: batteryPopup }
 
             BarButton {   // bell -> modules/notifications
@@ -140,28 +147,11 @@ Scope {
                 onClicked: bar.togglePopup(notifPopup)
                 onRightClicked: NotifSvc.doNotDisturb = !NotifSvc.doNotDisturb
             }
-            BarButton {   // clipboard -> modules/clipboard
-                text: "󰅍"
-                px: Theme.iconSize
-                fgColor: Theme.fg0
-                onClicked: {
-                    bar.togglePopup(clipPopup);
-                    if (clipPopup.visible) {
-                        Clip.refreshClip();
-                        clipPopup.focusSearch();
-                    }
-                }
-            }
+
             BarButton {   // clock -> modules/calendar
                 text: Qt.formatDateTime(Clock.date, "ddd dd MMM  HH:mm")
                 fgColor: Theme.fg
                 onClicked: bar.togglePopup(calPopup)
-            }
-            BarButton {   // power -> modules/power
-                text: "⏻"
-                px: Theme.iconSize
-                fgColor: Theme.red
-                onClicked: bar.togglePopup(powerPopup)
             }
         }
 
@@ -177,7 +167,6 @@ Scope {
         NotifCenter { id: notifPopup; bar: bar }
         ClipPopup { id: clipPopup; bar: bar }
         CalendarPopup { id: calPopup; bar: bar }
-        PowerPopup { id: powerPopup; bar: bar }
         TrayMenu { id: trayMenuPopup; bar: bar }
     }
 

@@ -35,7 +35,7 @@ Rectangle {
         IconImage {
             visible: parent.parent.entry && parent.parent.entry.icon !== ""
             source: parent.parent.entry ? parent.parent.entry.icon : ""
-            implicitSize: 20
+            implicitSize: Theme.fontSize + 2
         }
         Text {
             Layout.fillWidth: true

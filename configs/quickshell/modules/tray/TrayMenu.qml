@@ -1,27 +1,48 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import "../../Services"
 import "../../Widgets"
 import Quickshell.Widgets
 
-//            unreliable on wlroots layer-shell) ----------
-PopupWindow {
+// Layer window like every other popup: xdg-popups resize with blurred
+// buffers on fractional scale; layer surfaces (see the resolution
+// dropdown) resize cleanly. Inline submenu expansion needs that.
+PanelWindow {
+    id: trayMenuPopup
     required property var bar
     property var handle: null
-    function openFor(item, x) {
-        bar.closeAllPopups();
-        handle = item.menu;
-        anchor.rect.x = Math.min(x, bar.width - implicitWidth - 8);
-        visible = true;
-    }
-    id: trayMenuPopup
-    anchor.window: bar
-    anchor.rect.y: Theme.barHeight
+    property real pendingX: 0
+
+    screen: bar.screen
+    anchors { top: true; left: true }
+    margins { top: Theme.barHeight + 4; left: 8 }
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
     implicitWidth: 280
     implicitHeight: Math.min(560, trayMenuCol.implicitHeight + 16)
     visible: false
     color: Theme.bg0h
+
+    // DBus menus populate asynchronously: set the handle first, give the
+    // layout a beat to arrive, then map once at settled size.
+    function openFor(item, x) {
+        bar.closeAllPopups();
+        handle = item.menu;
+        pendingX = x;
+        openDelay.restart();
+    }
+    Timer {
+        id: openDelay
+        interval: 90
+        onTriggered: {
+            trayMenuPopup.margins.left =
+                Math.max(8, Math.min(trayMenuPopup.pendingX,
+                                     bar.width - trayMenuPopup.implicitWidth - 8));
+            trayMenuPopup.visible = true;
+        }
+    }
 
     QsMenuOpener {
         id: trayOpener
