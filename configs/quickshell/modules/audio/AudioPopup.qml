@@ -134,5 +134,46 @@ PanelWindow {
                 Layout.preferredWidth: 52
             }
         }
+
+        // input device picker (mics, line-in, headset mics)
+        Repeater {
+            model: ScriptModel {
+                values: (Pipewire.nodes ? [...Pipewire.nodes.values] : [])
+                    .filter(n => n && n.isSink === false && !n.isStream
+                                 && n.audio && (n.description ?? n.name ?? "") !== "")
+            }
+            Rectangle {
+                required property var modelData
+                readonly property bool current: modelData === Pipewire.defaultAudioSource
+                Layout.fillWidth: true
+                implicitHeight: 34
+                radius: 5
+                color: current ? Theme.bg2 : (inDevMa.containsMouse ? Theme.bg1 : "transparent")
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 6
+                    Text {
+                        text: parent.parent.current ? "󰄬" : "󰍬"
+                        color: parent.parent.current ? Theme.green : Theme.fgDim
+                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: modelData.description ?? modelData.name
+                        color: parent.parent.current ? Theme.fg0 : Theme.fg
+                        elide: Text.ElideRight
+                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
+                    }
+                }
+                MouseArea {
+                    id: inDevMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Quickshell.execDetached(["wpctl", "set-default", String(modelData.id)])
+                }
+            }
+        }
     }
 }

@@ -148,7 +148,10 @@ Scope {
             BatteryPill { bar: bar; popup: batteryPopup }
 
             BarButton {   // bell -> modules/notifications
-                px: Theme.iconSize - 4
+                // glyph-only states (DND, empty bell) render at full icon size;
+                // the smaller size only existed to fit the count next to the bell
+                px: (NotifSvc.doNotDisturb || NotifSvc.notifHistory.count === 0)
+                    ? Theme.iconSize : Theme.iconSize - 4
                 text: NotifSvc.doNotDisturb ? "󰂛"
                     : (NotifSvc.notifHistory.count > 0 ? "󰂚 " + NotifSvc.notifHistory.count : "󰂜")
                 fgColor: NotifSvc.doNotDisturb ? Theme.red
