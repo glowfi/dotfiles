@@ -19,7 +19,6 @@ import "modules/bluetooth"
 import "modules/audio"
 import "modules/display"
 import "modules/battery"
-import "modules/launcher"
 import "modules/notifications"
 import "modules/clipboard"
 import "modules/calendar"
@@ -60,11 +59,11 @@ Scope {
 
         // ---- popup management: one open at a time ----
         readonly property var allPopups: [
-            launcherPopup, layoutPopup, wifiPopup, btPopup, audioPopup,
+            layoutPopup, wifiPopup, btPopup, audioPopup,
             displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
             clipPopup, calPopup, powerPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
-            launcherPopup.visible || layoutPopup.visible || wifiPopup.visible
+            layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
             || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
             || notifPopup.visible
@@ -97,23 +96,6 @@ Scope {
             anchors.leftMargin: 8
             anchors.rightMargin: 8
             spacing: 8
-
-            BarButton {   // launcher -> modules/launcher
-                text: "󰣇"
-                px: Theme.iconSize
-                fgColor: Theme.blue
-                onClicked: {
-                    bar.togglePopup(launcherPopup);
-                    if (launcherPopup.visible) launcherPopup.focusSearch();
-                }
-            }
-            BarButton {   // overview (mango)
-                text: "󰕰"
-                px: Theme.iconSize
-                fgColor: Theme.aqua
-                tooltip: "overview"
-                onClicked: Mango.dispatch("toggleoverview")
-            }
 
             Tags { bar: bar }
 
@@ -186,7 +168,6 @@ Scope {
         }
 
         // ---- popups (one file each under modules/) ----
-        LauncherPopup { id: launcherPopup; bar: bar }
         LayoutPopup { id: layoutPopup; bar: bar }
         WifiPopup { id: wifiPopup; bar: bar }
         BtPopup { id: btPopup; bar: bar }
