@@ -4,7 +4,7 @@ keybindings:
   # ============================================================
   - name: File Manager
     keys: super+f
-    run: pcmanfm
+    run: thunar
 
   - name: Reload Mango Config
     keys: super+shift+q
