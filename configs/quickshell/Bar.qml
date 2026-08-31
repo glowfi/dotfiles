@@ -9,7 +9,6 @@ import "Services"
 import "Widgets"
 import "modules/workspaces"
 import "modules/layouts"
-import "modules/taskbar"
 import "modules/media"
 import "modules/tray"
 import "modules/sysmon"
@@ -38,7 +37,6 @@ Scope {
         // ---- per-monitor mango state (used by Tags + layout button) ----
         property var mTags: []
         property string mLayoutSym: "?"
-        property string mTitle: ""
         Process {
             id: monWatch
             running: true
@@ -49,13 +47,13 @@ Scope {
                         const j = JSON.parse(data);
                         bar.mTags = j.tags ?? [];
                         bar.mLayoutSym = j.layout_symbol ?? "?";
-                        bar.mTitle = (j.active_client && j.active_client.title) ? j.active_client.title : "";
                     } catch (e) { /* partial line, ignore */ }
                 }
             }
             onExited: monRestart.start()
         }
         Timer { id: monRestart; interval: 2000; onTriggered: monWatch.running = true }
+
 
         // ---- popup management: one open at a time ----
         readonly property var allPopups: [
@@ -108,7 +106,7 @@ Scope {
                 onMiddleClicked: Mango.dispatch("togglefloating")
             }
 
-            Taskbar {}
+            Item { Layout.fillWidth: true }   // spacer (taskbar removed)
             MediaBar {}
             Tray { bar: bar; menuPopup: trayMenuPopup }
 
