@@ -63,7 +63,7 @@ PopupWindow {
             model: NotifSvc.notifHistory
             delegate: Rectangle {
                 required property var model
-                width: ListView.view.width
+                width: ListView.view.width - 10
                 height: nhCol.implicitHeight + 16
                 radius: 6
                 color: Theme.bg1

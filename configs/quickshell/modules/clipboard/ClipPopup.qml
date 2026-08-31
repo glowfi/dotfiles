@@ -98,7 +98,7 @@ PanelWindow {
                     Clip.copyClip(modelData.cid);
                     clipPopup.visible = false;
                 }
-                width: clipList.width
+                width: clipList.width - 10
                 height: 38
                 radius: 5
                 color: clMa.containsMouse ? Theme.bg1 : "transparent"

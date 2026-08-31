@@ -76,7 +76,7 @@ ListView {
         // multi-window badge
         Rectangle {
             visible: task.wins.length > 1
-            anchors { top: parent.top; right: parent.right; topMargin: -2; rightMargin: -2 }
+            anchors { top: parent.top; right: parent.right; topMargin: 0; rightMargin: 0 }
             width: badge.width + 8
             height: 16
             radius: 8

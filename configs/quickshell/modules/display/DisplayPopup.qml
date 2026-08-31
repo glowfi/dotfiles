@@ -287,7 +287,10 @@ PanelWindow {
             }
         }
         Flickable {
+            id: modeFlick
             visible: displayPopup.resOpen
+            contentWidth: width
+            flickableDirection: Flickable.VerticalFlick
             Layout.fillWidth: true
             implicitHeight: Math.min(170, modeCol.implicitHeight)
             contentHeight: modeCol.implicitHeight
@@ -295,7 +298,7 @@ PanelWindow {
             ScrollBar.vertical: GruvScrollBar {}
             ColumnLayout {
                 id: modeCol
-                width: parent.width
+                width: modeFlick.width - 14
                 spacing: 2
                 Repeater {
                     model: outModes

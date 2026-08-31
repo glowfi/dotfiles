@@ -81,7 +81,7 @@ PanelWindow {
             delegate: Rectangle {
                 required property var modelData
                 function launch() { modelData.execute(); launcherPopup.visible = false }
-                width: launchList.width
+                width: launchList.width - 10
                 height: 44
                 radius: 6
                 color: appMa.containsMouse ? Theme.bg1 : "transparent"

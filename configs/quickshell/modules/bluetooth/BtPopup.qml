@@ -53,12 +53,14 @@ PanelWindow {
             id: btFlick
             Layout.fillWidth: true
             Layout.fillHeight: true
+            contentWidth: width
+            flickableDirection: Flickable.VerticalFlick
             contentHeight: btCol.implicitHeight
             clip: true
             ScrollBar.vertical: GruvScrollBar {}
             ColumnLayout {
                 id: btCol
-                width: parent.width
+                width: btFlick.width - 14   // scrollbar gutter, measured off the Flickable
                 spacing: 4
                 Repeater {
                     model: ScriptModel {

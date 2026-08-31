@@ -15,7 +15,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-    implicitWidth: 370
+    implicitWidth: 390
     implicitHeight: 440
     visible: false
     color: Theme.bg0h
@@ -54,14 +54,17 @@ PanelWindow {
         }
 
         Flickable {
+            id: wifiFlick
             Layout.fillWidth: true
             Layout.fillHeight: true
+            contentWidth: width
             contentHeight: wifiCol.implicitHeight
+            flickableDirection: Flickable.VerticalFlick
             clip: true
             ScrollBar.vertical: GruvScrollBar {}
             ColumnLayout {
                 id: wifiCol
-                width: parent.width
+                width: wifiFlick.width - 14   // scrollbar gutter, measured off the Flickable
                 spacing: 4
                 Repeater {
                     model: Net.wifiEnabled ? Net.wifiNets : []
