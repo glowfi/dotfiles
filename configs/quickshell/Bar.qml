@@ -10,6 +10,7 @@ import "Widgets"
 import "modules/workspaces"
 import "modules/layouts"
 import "modules/media"
+import "modules/wallpaper"
 import "modules/tray"
 import "modules/sysmon"
 import "modules/gpu"
@@ -58,14 +59,14 @@ Scope {
         readonly property var allPopups: [
             layoutPopup, wifiPopup, btPopup, audioPopup,
             displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
-            clipPopup, calPopup, mediaPopup, trayMenuPopup]
+            clipPopup, calPopup, mediaPopup, wallpaperPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
             layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
             || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
             || notifPopup.visible
             || clipPopup.visible || calPopup.visible || mediaPopup.visible
-            || trayMenuPopup.visible
+            || wallpaperPopup.visible || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
         function closeAllPopups() {
             // defensive: one failed-to-load popup must not brick every click
@@ -130,6 +131,7 @@ Scope {
             AudioPill { bar: bar; popup: audioPopup }
             BtPill { bar: bar; popup: btPopup }
             DisplayPill { bar: bar; popup: displayPopup }
+            WallpaperPill { bar: bar; popup: wallpaperPopup }
             WifiPill { bar: bar; popup: wifiPopup }
             BatteryPill { bar: bar; popup: batteryPopup }
 
@@ -167,6 +169,7 @@ Scope {
         ClipPopup { id: clipPopup; bar: bar }
         CalendarPopup { id: calPopup; bar: bar }
         MediaPopup { id: mediaPopup; bar: bar }
+        WallpaperPopup { id: wallpaperPopup; bar: bar }
         TrayMenu { id: trayMenuPopup; bar: bar }
     }
 
