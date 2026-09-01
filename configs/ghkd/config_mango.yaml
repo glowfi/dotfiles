@@ -104,7 +104,7 @@ keybindings:
       fi
       case "$(printf "Lock\nSleep\nReboot\nShutdown" | bemenu -p "Choose:" -i)" in
       'ScreenSaver') kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh" ;;
-      'Lock') kitty --class screensaver --start-as fullscreen -o background_opacity=1 bash "$HOME/.local/bin/screensaver.sh" ;;
+      'Lock') veila lock ;;
       'Sleep') "$ctl" suspend ;;
       'Reboot') "$ctl" reboot ;;
       'Shutdown') "$ctl" poweroff ;;
