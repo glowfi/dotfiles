@@ -58,13 +58,13 @@ Scope {
         readonly property var allPopups: [
             layoutPopup, wifiPopup, btPopup, audioPopup,
             displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
-            clipPopup, calPopup, trayMenuPopup]
+            clipPopup, calPopup, mediaPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
             layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
             || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
             || notifPopup.visible
-            || clipPopup.visible || calPopup.visible
+            || clipPopup.visible || calPopup.visible || mediaPopup.visible
             || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
         function closeAllPopups() {
@@ -106,8 +106,6 @@ Scope {
                 onMiddleClicked: Mango.dispatch("togglefloating")
             }
 
-            MediaBar {}
-
             Item { Layout.fillWidth: true }   // spacer
 
             // -------- right cluster --------
@@ -128,6 +126,7 @@ Scope {
                 }
             }
 
+            MediaPill { bar: bar; popup: mediaPopup }
             AudioPill { bar: bar; popup: audioPopup }
             BtPill { bar: bar; popup: btPopup }
             DisplayPill { bar: bar; popup: displayPopup }
@@ -167,6 +166,7 @@ Scope {
         NotifCenter { id: notifPopup; bar: bar }
         ClipPopup { id: clipPopup; bar: bar }
         CalendarPopup { id: calPopup; bar: bar }
+        MediaPopup { id: mediaPopup; bar: bar }
         TrayMenu { id: trayMenuPopup; bar: bar }
     }
 

@@ -36,7 +36,9 @@ Singleton {
             "  b=$(cat $d/gpu_busy_percent 2>/dev/null || echo -1); " +
             "  vu=$(cat $d/mem_info_vram_used 2>/dev/null || echo -1); " +
             "  vt=$(cat $d/mem_info_vram_total 2>/dev/null || echo -1); " +
-            "  echo \"$(basename $c) $v $b $vu $vt\"; " +
+            "  a=$(basename $(readlink -f $d)); " +
+            "  n=$(lspci -mm -s $a 2>/dev/null | awk -F'\"' '{print $6}'); " +
+            "  echo \"$(basename $c) $v $b $vu $vt|$n\"; " +
             "done; " +
             "nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total " +
             "--format=csv,noheader,nounits 2>/dev/null | head -1 | awk -F', *' '{print \"NV\", $1, $2, $3}'"]
@@ -46,17 +48,20 @@ Singleton {
                 const out = [];
                 let nv = null;
                 for (const line of text.split("\n")) {
-                    const p = line.trim().split(/\s+/);
+                    const parts = line.split("|");
+                    const p = parts[0].trim().split(/\s+/);
                     if (p[0] === "NV" && p.length >= 4) {
                         nv = { busy: parseInt(p[1]), vramUsed: parseInt(p[2]) / 1024,
                                vramTotal: parseInt(p[3]) / 1024 };
                         continue;
                     }
                     if (p.length < 5) continue;
+                    const pretty = (parts[1] ?? "").trim();
                     out.push({
                         card: p[0],
                         vendor: p[1],
-                        name: gpu.vendorName(p[1]) + " (" + p[0] + ")",
+                        name: pretty !== "" ? pretty
+                              : gpu.vendorName(p[1]) + " (" + p[0] + ")",
                         busy: parseInt(p[2]),
                         vramUsed: parseInt(p[3]) > 0 ? parseInt(p[3]) / 1073741824 : -1,
                         vramTotal: parseInt(p[4]) > 0 ? parseInt(p[4]) / 1073741824 : -1
