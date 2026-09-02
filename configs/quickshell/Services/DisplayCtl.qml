@@ -42,6 +42,9 @@ Singleton {
     }
     function setBrightness(pct) {
         briPending = Math.max(1, Math.min(100, Math.round(pct)));
+        // optimistic: move the bound property NOW so sliders track the drag
+        // continuously; the post-apply poll confirms (or corrects) it.
+        brightness = briPending;
         briApply.restart();
     }
     Timer { id: briApply; interval: 120; onTriggered: briSet.running = true }

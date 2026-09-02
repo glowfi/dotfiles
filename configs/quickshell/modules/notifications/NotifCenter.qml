@@ -14,11 +14,20 @@ PopupWindow {
     implicitWidth: 430
     implicitHeight: 520
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: 14
         spacing: 8
         RowLayout {
             Layout.fillWidth: true

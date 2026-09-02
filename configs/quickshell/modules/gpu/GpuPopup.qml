@@ -13,10 +13,19 @@ PanelWindow {
     margins { top: Theme.barHeight + 4; left: 8 }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
-    implicitWidth: 360
+    implicitWidth: 390
     implicitHeight: gpuCol.implicitHeight + 28
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     ColumnLayout {
         id: gpuCol
@@ -45,9 +54,11 @@ PanelWindow {
                         anchors.leftMargin: 8
                         anchors.rightMargin: 8
                         Text {
+                            id: gpuNameText
                             Layout.fillWidth: true
                             text: gpuEntry.modelData.name
                             color: gpuEntry.current ? Theme.fg0 : Theme.fg
+                            elide: Text.ElideRight
                             font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
                         }
                         Text {

@@ -17,7 +17,16 @@ PanelWindow {
     implicitWidth: 310
     implicitHeight: batCol.implicitHeight + 28
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     ColumnLayout {
         id: batCol

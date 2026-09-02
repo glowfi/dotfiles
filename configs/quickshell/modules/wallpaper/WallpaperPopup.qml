@@ -19,11 +19,20 @@ PanelWindow {
     implicitWidth: 480
     implicitHeight: 430
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.margins: 14
         spacing: 8
 
         RowLayout {
@@ -79,9 +88,22 @@ PanelWindow {
                             wallPopup.visible = false;
                         }
                     }
-                    ToolTip.visible: thumbMa.containsMouse
-                    ToolTip.text: modelData.split("/").pop()
-                    ToolTip.delay: 700
+                    ToolTip {
+                        visible: thumbMa.containsMouse
+                        delay: 700
+                        padding: 8
+                        background: Rectangle {
+                            color: Theme.bg0h
+                            radius: 6
+                            border.width: 1
+                            border.color: Theme.bg2
+                        }
+                        contentItem: Text {
+                            text: modelData.split("/").pop()
+                            color: Theme.fg
+                            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
+                        }
+                    }
                 }
             }
 

@@ -14,6 +14,7 @@ Rectangle {
     implicitHeight: 30
     radius: 4
     color: btnMa.containsMouse ? Theme.bg1 : "transparent"
+    Behavior on color { ColorAnimation { duration: 120 } }
     Text {
         id: btnText
         anchors.centerIn: parent
@@ -32,7 +33,21 @@ Rectangle {
             else parent.clicked();
         }
     }
-    ToolTip.visible: tooltip !== "" && btnMa.containsMouse
-    ToolTip.text: tooltip
-    ToolTip.delay: 600
+    ToolTip {
+        visible: tooltip !== "" && btnMa.containsMouse
+        text: tooltip
+        delay: 600
+        padding: 8
+        background: Rectangle {
+            color: Theme.bg0h
+            radius: 6
+            border.width: 1
+            border.color: Theme.bg2
+        }
+        contentItem: Text {
+            text: tooltip
+            color: Theme.fg
+            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
+        }
+    }
 }

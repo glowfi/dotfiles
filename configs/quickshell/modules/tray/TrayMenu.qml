@@ -23,7 +23,16 @@ PanelWindow {
     implicitWidth: 280
     implicitHeight: Math.min(560, trayMenuCol.implicitHeight + 16)
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     // DBus menus populate asynchronously: set the handle first, give the
     // layout a beat to arrive, then map once at settled size.

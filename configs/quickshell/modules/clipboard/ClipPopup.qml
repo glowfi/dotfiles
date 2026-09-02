@@ -20,7 +20,16 @@ PanelWindow {
     implicitWidth: 480
     implicitHeight: 460
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     function focusSearch() { clipSearch.forceActiveFocus() }
     onVisibleChanged: if (!visible) clipSearch.text = ""
@@ -39,7 +48,7 @@ PanelWindow {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: 14
         spacing: 6
 
         Text {

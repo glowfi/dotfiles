@@ -87,7 +87,7 @@ Scope {
             togglePopup(p);
         }
 
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 2; color: Theme.bg1 }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.bg2 }
 
         RowLayout {
             anchors.fill: parent

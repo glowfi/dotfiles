@@ -56,7 +56,11 @@ Singleton {
                         continue;
                     }
                     if (p.length < 5) continue;
-                    const pretty = (parts[1] ?? "").trim();
+                    let pretty = (parts[1] ?? "").trim();
+                    // lspci device names embed the marketing name in brackets;
+                    // prefer it: "Navi 33 [Radeon RX 7700S]" -> "Radeon RX 7700S"
+                    const bm = pretty.match(/\[([^\]]+)\][^\[]*$/);
+                    if (bm) pretty = bm[1];
                     out.push({
                         card: p[0],
                         vendor: p[1],

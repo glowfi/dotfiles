@@ -18,11 +18,20 @@ PanelWindow {
     implicitWidth: 340
     implicitHeight: Math.min(460, btHead.implicitHeight + btFlick.contentHeight + 44)
     visible: false
-    color: Theme.bg0h
+    color: "transparent"
+
+    // popup surface: rounded + hairline border (windows are transparent)
+    Rectangle {
+        anchors.fill: parent
+        radius: 10
+        color: Theme.bg0h
+        border.width: 1
+        border.color: Theme.bg2
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.margins: 14
         spacing: 8
 
         RowLayout {

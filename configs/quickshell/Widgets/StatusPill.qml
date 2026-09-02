@@ -17,6 +17,7 @@ Rectangle {
     implicitHeight: 30
     radius: 4
     color: pillMa.containsMouse ? Theme.bg1 : "transparent"
+    Behavior on color { ColorAnimation { duration: 120 } }
     RowLayout {
         id: pillRow
         anchors.centerIn: parent
@@ -42,7 +43,21 @@ Rectangle {
         onClicked: ev => ev.button === Qt.RightButton ? parent.rightClicked() : parent.clicked()
         onWheel: ev => parent.wheelMoved(ev.angleDelta.y)
     }
-    ToolTip.visible: tooltip !== "" && pillMa.containsMouse
-    ToolTip.text: tooltip
-    ToolTip.delay: 700
+    ToolTip {
+        visible: tooltip !== "" && pillMa.containsMouse
+        text: tooltip
+        delay: 700
+        padding: 8
+        background: Rectangle {
+            color: Theme.bg0h
+            radius: 6
+            border.width: 1
+            border.color: Theme.bg2
+        }
+        contentItem: Text {
+            text: tooltip
+            color: Theme.fg
+            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
+        }
+    }
 }
