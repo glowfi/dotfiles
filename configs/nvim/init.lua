@@ -1,14 +1,6 @@
--- Global Paths
-CONFIG_PATH = vim.fn.stdpath("config")
-DATA_PATH = vim.fn.stdpath("data")
-CACHE_PATH = vim.fn.stdpath("cache")
+-- Cache compiled Lua modules for faster startup
+vim.loader.enable()
 
--- General Settings
-require("settings")
 require("keymaps")
-
--- Plugins
+require("options")
 require("plugins")
-
--- LSP
-require("lsp")

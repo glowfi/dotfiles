@@ -1,31 +1,31 @@
 -- Settings
+local status_ok, gruvbox = pcall(require, "gruvbox")
+if not status_ok then
+	return
+end
+
+gruvbox.setup({
+	transparent_mode = true,
+})
+
+-- Highlight overrides: applied now and re-applied on any colorscheme reload
+local function hl_overrides()
+	-- Amber current line number, no bar
+	vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#fabd2f", bg = "NONE" })
+
+	-- LSP reference highlights (document_highlight under cursor)
+	vim.api.nvim_set_hl(0, "LspReferenceText", { bg = "#404040" })
+	vim.api.nvim_set_hl(0, "LspReferenceRead", { bg = "#404040" })
+	vim.api.nvim_set_hl(0, "LspReferenceWrite", { bg = "#4a4440", bold = true })
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+	group = vim.api.nvim_create_augroup("nvim/hl-overrides", { clear = true }),
+	callback = hl_overrides,
+})
+
 vim.o.background = "dark"
-vim.cmd([[colorscheme gruvbox]])
+vim.cmd.colorscheme("gruvbox")
 
--- Line Number Highlight
-vim.cmd("set cursorline")
-vim.cmd("highlight clear CursorLine")
-vim.cmd("highlight CursorLineNR guifg=#fabd2f guibg=none ctermbg=none ctermfg=none")
-
--- Transparency
-vim.cmd("hi! Normal ctermbg=NONE guibg=NONE")
-vim.cmd("hi! NonText ctermbg=NONE guibg=NONE guifg=NONE ctermfg=NONE")
-vim.cmd("hi! SignColumn ctermbg=none guibg=none")
-vim.cmd("hi! NormalNC ctermbg=none guibg=none")
-vim.cmd("hi! MsgArea ctermbg=none guibg=none")
-vim.cmd("hi! TelescopeBorder ctermbg=none guibg=none")
-
--- LspDiagnostics
-vim.cmd("hi! DiagnosticSignError  ctermbg=none guibg=none guifg=#fb4934")
-vim.cmd("hi! DiagnosticSignWarn  ctermbg=none guibg=none guifg=#fabd2f")
-vim.cmd("hi! DiagnosticSignHint  ctermbg=none guibg=none guifg=#8ec07c")
-vim.cmd("hi! DiagnosticSignInfo  ctermbg=none guibg=none guifg=#83a598")
-
--- Gitsigns
-vim.cmd("hi! GitSignsAdd     ctermbg=none guibg=none guifg=#b8bb26")
-vim.cmd("hi! GitSignsChange  ctermbg=none guibg=none guifg=#83a598")
-vim.cmd("hi! GitSignsDelete  ctermbg=none guibg=none guifg=#fb4934")
-
--- CursorLine
--- vim.cmd("set cursorline")
--- vim.cmd("hi CursorLine gui=underline cterm=underline")
+-- Cursorline: highlight only the line number
+vim.o.cursorlineopt = "number"

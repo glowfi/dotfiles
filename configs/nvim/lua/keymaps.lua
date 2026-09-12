@@ -1,78 +1,84 @@
--- Leader key
-vim.cmd("let mapleader = ' '")
+-- Set space as the leader key
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
 
--- Remapping vertical split.
-vim.api.nvim_set_keymap("n", "<Leader>v", ":vsplit<cr>", { silent = true })
+-- Splits
 
--- Remapping horizontal split.
-vim.api.nvim_set_keymap("n", "<Leader>h", ":split<cr>", { silent = true })
+-- Vertical split
+vim.keymap.set("n", "<Leader>v", "<cmd>vsplit<CR>", { silent = true, desc = "Vertical split" })
 
--- Quit Current window.
-vim.api.nvim_set_keymap("n", "<c-q>", ":quit<cr>", { silent = true })
+-- Horizontal split
+vim.keymap.set("n", "<Leader>h", "<cmd>split<CR>", { silent = true, desc = "Horizontal split" })
 
--- Save current file.
-vim.api.nvim_set_keymap("n", "<S-s>", ":w<cr>", { silent = true })
+-- Quit current window
+vim.keymap.set("n", "<C-q>", "<cmd>quit<CR>", { silent = true, desc = "Quit window" })
 
--- Replace all instance in normal mode of selected word.
-vim.api.nvim_set_keymap("n", "<Leader>r", ":%s///g<Left><Left>", { silent = true })
+-- Save current file
+vim.keymap.set("n", "<S-s>", "<cmd>write<CR>", { silent = true, desc = "Save file" })
 
--- Replace all instance in visual mode of selected word.Can be used to select a range of lines to replace words.
-vim.cmd('vnoremap <Leader>r "hy:%s/<C-r>h//gc<left><left><left>')
+-- Search & replace
 
--- Clear search highlights.
-vim.api.nvim_set_keymap("n", "<c-Space>", ':let @/=""<CR>', { silent = true })
+-- Replace: prompt with cursor placed inside the pattern
+vim.keymap.set("n", "<Leader>r", ":%s///g<Left><Left>", { desc = "Replace in file" })
 
--- Map Ctrl-Backspace to delete the previous word in insert mode.
-vim.cmd("noremap! <C-BS> <C-w>")
-vim.cmd("noremap! <C-h> <C-w>")
+-- Replace visually selected text across the file (with confirm)
+vim.keymap.set("v", "<Leader>r", '"hy:%s/<C-r>h//gc<Left><Left><Left>', { desc = "Replace selection" })
 
--- Window movements
-vim.api.nvim_set_keymap("n", "<C-h>", "<C-w>h", { silent = true })
-vim.api.nvim_set_keymap("n", "<C-j>", "<C-w>j", { silent = true })
-vim.api.nvim_set_keymap("n", "<C-k>", "<C-w>k", { silent = true })
-vim.api.nvim_set_keymap("n", "<C-l>", "<C-w>l", { silent = true })
+-- Clear search highlights
+vim.keymap.set("n", "<C-Space>", '<cmd>let @/=""<CR>', { silent = true, desc = "Clear search highlight" })
 
--- Resize split windows using arrow keys by pressing.
-vim.api.nvim_set_keymap("n", "<M-Up>", ":resize +2<CR>", { silent = true })
-vim.api.nvim_set_keymap("n", "<M-Down>", ":resize -2<CR>", { silent = true })
-vim.api.nvim_set_keymap("n", "<M-Left>", ":vertical resize -2<CR>", { silent = true })
-vim.api.nvim_set_keymap("n", "<M-Right>", ":vertical resize +2<CR>", { silent = true })
+-- Insert/cmdline: ctrl-backspace deletes previous word ─────
 
--- Move selected line / block of text in visual mode
-vim.api.nvim_set_keymap("x", "K", ":move '<-2<CR>gv-gv", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("x", "J", ":move '>+1<CR>gv-gv", { noremap = true, silent = true })
+vim.keymap.set({ "i", "c" }, "<C-BS>", "<C-w>", { desc = "Delete previous word" })
+vim.keymap.set({ "i", "c" }, "<C-h>", "<C-w>", { desc = "Delete previous word" })
 
--- Copy all to clipboard
-vim.api.nvim_set_keymap("n", "<Leader>y", ":%y+<cr>", { noremap = true, silent = true })
+-- Window navigation
+
+vim.keymap.set("n", "<C-h>", "<C-w>h", { silent = true, desc = "Window left" })
+vim.keymap.set("n", "<C-j>", "<C-w>j", { silent = true, desc = "Window down" })
+vim.keymap.set("n", "<C-k>", "<C-w>k", { silent = true, desc = "Window up" })
+vim.keymap.set("n", "<C-l>", "<C-w>l", { silent = true, desc = "Window right" })
+
+-- Window resizing
+
+vim.keymap.set("n", "<M-Up>", "<cmd>resize +2<CR>", { silent = true, desc = "Grow height" })
+vim.keymap.set("n", "<M-Down>", "<cmd>resize -2<CR>", { silent = true, desc = "Shrink height" })
+vim.keymap.set("n", "<M-Left>", "<cmd>vertical resize -2<CR>", { silent = true, desc = "Shrink width" })
+vim.keymap.set("n", "<M-Right>", "<cmd>vertical resize +2<CR>", { silent = true, desc = "Grow width" })
+
+-- Move visual selection
+
+vim.keymap.set("x", "K", ":move '<-2<CR>gv-gv", { silent = true, desc = "Move selection up" })
+vim.keymap.set("x", "J", ":move '>+1<CR>gv-gv", { silent = true, desc = "Move selection down" })
+
+-- Clipboard / selection
+
+-- Copy whole file to system clipboard
+vim.keymap.set("n", "<Leader>y", "<cmd>%y+<CR>", { silent = true, desc = "Yank file to clipboard" })
 
 -- Select all
-vim.api.nvim_set_keymap("n", "<c-a>", "ggVG", { noremap = true, silent = true })
+vim.keymap.set("n", "<C-a>", "ggVG", { silent = true, desc = "Select all" })
 
--- Increase Decrease Numbers
-vim.cmd("nnoremap <c-i> <C-a>")
-vim.cmd("nnoremap <c-d> <C-x>")
+-- Increment / decrement numbers
 
--- Insert special characters
-vim.cmd("inoremap <c-a> ä")
-vim.cmd("inoremap <m-a> Ä")
-vim.cmd("inoremap <c-o> ö")
-vim.cmd("inoremap <m-o> Ö")
-vim.cmd("inoremap <c-u> ü")
-vim.cmd("inoremap <m-u> Ü")
-vim.cmd("inoremap <c-b> ß")
+vim.keymap.set("n", "<C-i>", "<C-a>", { desc = "Increment number" })
+vim.keymap.set("n", "<C-d>", "<C-x>", { desc = "Decrement number" })
 
--- Disable Completion
-vim.api.nvim_set_keymap(
-	"n",
-	"<Leader>l",
-	":lua require('cmp').setup { enabled = false }<CR>:LspStop<CR>",
-	{ noremap = true, silent = true }
-)
+-- Insert German special characters
 
--- Enable Completion
-vim.api.nvim_set_keymap(
-	"n",
-	"<M-l>",
-	":lua require('cmp').setup { enabled = true }<CR>:LspStart<CR>",
-	{ noremap = true, silent = true }
-)
+vim.keymap.set("i", "<C-a>", "ä")
+vim.keymap.set("i", "<M-a>", "Ä")
+vim.keymap.set("i", "<C-o>", "ö")
+vim.keymap.set("i", "<M-o>", "Ö")
+vim.keymap.set("i", "<C-u>", "ü")
+vim.keymap.set("i", "<M-u>", "Ü")
+vim.keymap.set("i", "<C-b>", "ß")
+
+-- Clear highlights on search when pressing <Esc> in normal mode
+--  See `:help hlsearch`
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+
+-- Ctrl-/ to toggle comments (builtin gc)
+
+vim.keymap.set("n", "<C-/>", "gcc", { remap = true, desc = "Toggle comment" })
+vim.keymap.set("v", "<C-/>", "gc", { remap = true, desc = "Toggle comment" })

@@ -6,55 +6,32 @@ end
 
 gitsigns.setup({
 	signs = {
-		add = {
-			text = "┃ ",
-		},
-		change = {
-			text = "┃ ",
-		},
-		delete = {
-			text = "┃ ",
-		},
-		topdelete = {
-			text = "┃ ",
-		},
-		changedelete = {
-			text = "┃ ",
-		},
+		add = { text = "┃" },
+		change = { text = "┃" },
+		delete = { text = "┃" },
+		topdelete = { text = "┃" },
+		changedelete = { text = "┃" },
 	},
 	on_attach = function(bufnr)
-		vim.keymap.set(
-			"n",
-			"<leader>hp",
-			require("gitsigns").preview_hunk,
-			{ buffer = bufnr, desc = "Preview git hunk" }
-		)
+		vim.keymap.set("n", "<leader>hp", gitsigns.preview_hunk, { buffer = bufnr, desc = "Preview git hunk" })
 
-		-- don't override the built-in and fugitive keymaps
-		local gs = package.loaded.gitsigns
+		-- don't override the built-in diff-mode ]c/[c
 		vim.keymap.set({ "n", "v" }, "]c", function()
 			if vim.wo.diff then
-				return "]c"
+				vim.cmd.normal({ "]c", bang = true })
+			else
+				gitsigns.nav_hunk("next")
 			end
-			vim.schedule(function()
-				gs.next_hunk()
-			end)
-			return "<Ignore>"
-		end, { expr = true, buffer = bufnr, desc = "Jump to next hunk" })
+		end, { buffer = bufnr, desc = "Jump to next hunk" })
+
 		vim.keymap.set({ "n", "v" }, "[c", function()
 			if vim.wo.diff then
-				return "[c"
+				vim.cmd.normal({ "[c", bang = true })
+			else
+				gitsigns.nav_hunk("prev")
 			end
-			vim.schedule(function()
-				gs.prev_hunk()
-			end)
-			return "<Ignore>"
-		end, { expr = true, buffer = bufnr, desc = "Jump to previous hunk" })
+		end, { buffer = bufnr, desc = "Jump to previous hunk" })
 	end,
-	numhl = false,
-	linehl = false,
-	watch_gitdir = { interval = 1000 },
 	sign_priority = 6,
 	update_debounce = 200,
-	status_formatter = nil,
 })
