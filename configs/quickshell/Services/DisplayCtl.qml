@@ -18,28 +18,43 @@ Singleton {
     Process {
         id: nlEnforce
         command: ["sh", "-c", `FLAG="$HOME/.config/mango/nightlight-on"
-forced=0; other=0
+alive=0
 for p in $(pgrep -x wlsunset 2>/dev/null); do
-  [ "$(cut -d\  -f3 "/proc/$p/stat" 2>/dev/null)" = Z ] && continue
-  if grep -aq -- "-T.4050" "/proc/$p/cmdline" 2>/dev/null; then forced=1; else other=1; fi
+  # zombie filter WITHOUT field parsing: the previous cut -d'\ ' lost its
+  # backslash through QML escaping, cut errored, and a zombie counted as
+  # alive — so the enforcer never started wlsunset again. grep needs no
+  # escape-sensitive characters at all.
+  grep -q zombie "/proc/$p/status" 2>/dev/null || alive=1
 done
-if [ -f "$FLAG" ]; then
-  # ON must mean visibly warm NOW: schedule-mode instances (autostart) show
-  # daytime 6500K, so replace them with our forced-warm one
-  if [ $forced -eq 0 ]; then
-    [ $other -eq 1 ] && { pkill -x wlsunset; sleep 0.4; }
+flag=absent; [ -f "$FLAG" ] && flag=present
+echo "$(date +%T) enforce: flag=$flag alive=$alive" >>/tmp/wlsunset.log
+if [ "$flag" = present ]; then
+  if [ $alive -eq 0 ]; then
+    echo "$(date +%T) enforce: starting wlsunset" >>/tmp/wlsunset.log
     setsid -f sh -c 'exec wlsunset -t 4000 -T 4050 >>/tmp/wlsunset.log 2>&1'
   fi
 else
-  pkill -x wlsunset 2>/dev/null
+  if [ $alive -eq 1 ]; then
+    echo "$(date +%T) enforce: killing wlsunset (flag off)" >>/tmp/wlsunset.log
+    pkill -x wlsunset 2>/dev/null
+  fi
 fi`]
         running: true
     }
 
-    Process {   // startup: UI state = flag
+    Process {   // UI state = flag file, re-checked continuously so EXTERNAL
+                // togglers (hotkey scripts touching/removing the flag) are
+                // reflected in the switch within one poll cycle
+        id: nlFlagCheck
         command: ["sh", "-c", '[ -f "$HOME/.config/mango/nightlight-on" ]']
         running: true
         onExited: code => displayCtl.nightLight = (code === 0)
+    }
+
+    // clean external entry point:  qs ipc call night toggle
+    IpcHandler {
+        target: "night"
+        function toggle(): void { displayCtl.toggleNightLight() }
     }
 
     function toggleNightLight() {
@@ -141,6 +156,6 @@ fi`]
 
     Timer {
         interval: 10000; running: true; repeat: true
-        onTriggered: { nlEnforce.running = true; briGet.running = true }
+        onTriggered: { nlEnforce.running = true; nlFlagCheck.running = true; briGet.running = true }
     }
 }
