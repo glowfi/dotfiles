@@ -7,19 +7,49 @@ Singleton {
     id: displayCtl
 
     // ================= night light (wlsunset) =================
+    // Flag file = truth; enforcer reconciles. Key insight: wlsunset is a
+    // SCHEDULER — "-t 4000 -T 6500" shows 6500K (no tint) in daytime, so a
+    // toggle backed by it looks dead at noon. ON therefore runs a forced-warm
+    // instance (-t 4000 -T 4050: warm at any hour); schedule-mode instances
+    // (e.g. an exec-once autostart) are replaced while the flag is on and
+    // killed while it is off. The autostart line can stay in mango config.
     property bool nightLight: false
+
     Process {
-        id: nlCheck
-        command: ["sh", "-c", "pgrep -x wlsunset >/dev/null && echo on || echo off"]
+        id: nlEnforce
+        command: ["sh", "-c", `FLAG="$HOME/.config/mango/nightlight-on"
+forced=0; other=0
+for p in $(pgrep -x wlsunset 2>/dev/null); do
+  [ "$(cut -d\  -f3 "/proc/$p/stat" 2>/dev/null)" = Z ] && continue
+  if grep -aq -- "-T.4050" "/proc/$p/cmdline" 2>/dev/null; then forced=1; else other=1; fi
+done
+if [ -f "$FLAG" ]; then
+  # ON must mean visibly warm NOW: schedule-mode instances (autostart) show
+  # daytime 6500K, so replace them with our forced-warm one
+  if [ $forced -eq 0 ]; then
+    [ $other -eq 1 ] && { pkill -x wlsunset; sleep 0.4; }
+    setsid -f sh -c 'exec wlsunset -t 4000 -T 4050 >>/tmp/wlsunset.log 2>&1'
+  fi
+else
+  pkill -x wlsunset 2>/dev/null
+fi`]
         running: true
-        stdout: StdioCollector { onStreamFinished: nightLight = text.trim() === "on" }
     }
+
+    Process {   // startup: UI state = flag
+        command: ["sh", "-c", '[ -f "$HOME/.config/mango/nightlight-on" ]']
+        running: true
+        onExited: code => displayCtl.nightLight = (code === 0)
+    }
+
     function toggleNightLight() {
-        Quickshell.execDetached(["sh", "-c",
-            "pgrep -x wlsunset >/dev/null && pkill -x wlsunset || setsid -f wlsunset -t 4000 -T 6500"]);
-        nlRecheck.start();
+        nightLight = !nightLight;
+        Quickshell.execDetached(["sh", "-c", nightLight
+            ? 'touch "$HOME/.config/mango/nightlight-on"'
+            : 'rm -f "$HOME/.config/mango/nightlight-on"']);
+        nlKick.restart();
     }
-    Timer { id: nlRecheck; interval: 400; onTriggered: nlCheck.running = true }
+    Timer { id: nlKick; interval: 250; onTriggered: nlEnforce.running = true }
 
     // ================= brightness (brightnessctl) =================
     property int brightness: -1
@@ -111,6 +141,6 @@ Singleton {
 
     Timer {
         interval: 10000; running: true; repeat: true
-        onTriggered: { nlCheck.running = true; briGet.running = true }
+        onTriggered: { nlEnforce.running = true; briGet.running = true }
     }
 }
