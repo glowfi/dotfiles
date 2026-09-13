@@ -27,9 +27,14 @@ PopupWindow {
 
     property int viewMonth: Clock.date.getMonth()
     property int viewYear: Clock.date.getFullYear()
+    // "days" | "months" | "years" — title click drills up, picking drills down
+    property string mode: "days"
+    property int yearPage: 0        // years view: page offset in 12-year steps
     onVisibleChanged: if (visible) {
         viewMonth = Clock.date.getMonth();
         viewYear = Clock.date.getFullYear();
+        mode = "days";
+        yearPage = 0;
     }
     function shiftMonth(d) {
         let m = viewMonth + d;
@@ -43,34 +48,68 @@ PopupWindow {
         anchors.margins: 14
         spacing: 8
 
-        // ---- header: « ‹ Month Year › » + today ----
+        // ---- header: nav + drill-up title (day->month picker->year picker) ----
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
-            CalNavButton { text: "«"; onClicked: calPopup.viewYear-- }
-            CalNavButton { text: "‹"; onClicked: calPopup.shiftMonth(-1) }
-            Item {
+            CalNavButton {
+                text: "«"
+                onClicked: {
+                    if (calPopup.mode === "years") calPopup.yearPage -= 1;
+                    else calPopup.viewYear--;
+                }
+            }
+            CalNavButton {
+                text: "‹"
+                visible: calPopup.mode === "days"
+                onClicked: calPopup.shiftMonth(-1)
+            }
+            Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 32
+                radius: 6
+                color: titleMa.containsMouse && calPopup.mode !== "years" ? Theme.bg1 : "transparent"
+                Behavior on color { ColorAnimation { duration: 120 } }
                 Text {
                     anchors.centerIn: parent
-                    text: Qt.locale().monthName(calPopup.viewMonth) + " " + calPopup.viewYear
+                    text: {
+                        if (calPopup.mode === "days")
+                            return Qt.locale().monthName(calPopup.viewMonth) + " " + calPopup.viewYear;
+                        if (calPopup.mode === "months")
+                            return calPopup.viewYear;
+                        const base = calPopup.viewYear - 5 + calPopup.yearPage * 12;
+                        return base + " – " + (base + 11);
+                    }
                     color: Theme.yellow
                     font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize + 1 }
                 }
                 MouseArea {
+                    id: titleMa
                     anchors.fill: parent
+                    hoverEnabled: true
+                    // days -> pick a month; months -> pick a year
                     onClicked: {
-                        calPopup.viewMonth = Clock.date.getMonth();
-                        calPopup.viewYear = Clock.date.getFullYear();
+                        if (calPopup.mode === "days") calPopup.mode = "months";
+                        else if (calPopup.mode === "months") { calPopup.yearPage = 0; calPopup.mode = "years"; }
                     }
                 }
             }
-            CalNavButton { text: "›"; onClicked: calPopup.shiftMonth(1) }
-            CalNavButton { text: "»"; onClicked: calPopup.viewYear++ }
+            CalNavButton {
+                text: "›"
+                visible: calPopup.mode === "days"
+                onClicked: calPopup.shiftMonth(1)
+            }
+            CalNavButton {
+                text: "»"
+                onClicked: {
+                    if (calPopup.mode === "years") calPopup.yearPage += 1;
+                    else calPopup.viewYear++;
+                }
+            }
         }
 
         DayOfWeekRow {
+            visible: calPopup.mode === "days"
             Layout.fillWidth: true
             delegate: Text {
                 required property var model
@@ -83,6 +122,7 @@ PopupWindow {
 
         MonthGrid {
             id: calGrid
+            visible: calPopup.mode === "days"
             Layout.fillWidth: true
             Layout.fillHeight: true
             month: calPopup.viewMonth
@@ -128,6 +168,86 @@ PopupWindow {
             }
         }
 
+        // ---- month picker ----
+        GridLayout {
+            visible: calPopup.mode === "months"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            columns: 3
+            rowSpacing: 8
+            columnSpacing: 8
+            Repeater {
+                model: 12
+                Rectangle {
+                    required property int index
+                    readonly property bool current:
+                        index === Clock.date.getMonth()
+                        && calPopup.viewYear === Clock.date.getFullYear()
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: 8
+                    color: current ? Theme.yellow
+                         : monMa.containsMouse ? Theme.bg2 : Theme.bg1
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Text {
+                        anchors.centerIn: parent
+                        text: Qt.locale().monthName(parent.index, Locale.ShortFormat)
+                        color: parent.current ? Theme.bg0 : Theme.fg
+                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+                    }
+                    MouseArea {
+                        id: monMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            calPopup.viewMonth = parent.index;
+                            calPopup.mode = "days";
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- year picker (12 years per page) ----
+        GridLayout {
+            visible: calPopup.mode === "years"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            columns: 3
+            rowSpacing: 8
+            columnSpacing: 8
+            Repeater {
+                model: 12
+                Rectangle {
+                    required property int index
+                    readonly property int yr: calPopup.viewYear - 5 + calPopup.yearPage * 12 + index
+                    readonly property bool current: yr === Clock.date.getFullYear()
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: 8
+                    color: current ? Theme.yellow
+                         : yrMa.containsMouse ? Theme.bg2 : Theme.bg1
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Text {
+                        anchors.centerIn: parent
+                        text: parent.yr
+                        color: parent.current ? Theme.bg0 : Theme.fg
+                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+                    }
+                    MouseArea {
+                        id: yrMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            calPopup.viewYear = parent.yr;
+                            calPopup.yearPage = 0;
+                            calPopup.mode = "months";
+                        }
+                    }
+                }
+            }
+        }
+
         // today shortcut
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
@@ -147,6 +267,7 @@ PopupWindow {
                 onClicked: {
                     calPopup.viewMonth = Clock.date.getMonth();
                     calPopup.viewYear = Clock.date.getFullYear();
+                    calPopup.mode = "days";
                 }
             }
         }
