@@ -47,3 +47,19 @@ halign = "right"
 valign = "top"
 x = -24
 y = 17
+
+[visuals.power.suspend]
+enabled = true
+confirm = true
+color = "#ebdbb2"
+background_color = "#28282899"
+x = -78
+y = 17
+
+[visuals.power.poweroff]
+enabled = true
+confirm = true
+color = "#fb4934"
+background_color = "#28282899"
+x = -132
+y = 17
