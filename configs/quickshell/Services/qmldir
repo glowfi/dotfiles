@@ -1,4 +1,5 @@
 singleton BatteryInfo BatteryInfo.qml
+singleton BtCtl BtCtl.qml
 singleton Clip Clip.qml
 singleton Clock Clock.qml
 singleton DisplayCtl DisplayCtl.qml
