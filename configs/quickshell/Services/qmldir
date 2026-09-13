@@ -1,3 +1,4 @@
+singleton BarCtl BarCtl.qml
 singleton BatteryInfo BatteryInfo.qml
 singleton BtCtl BtCtl.qml
 singleton Clip Clip.qml

@@ -30,6 +30,8 @@ Scope {
     PanelWindow {
         id: bar
         screen: perScreen.modelData
+        visible: !BarCtl.hidden
+        onVisibleChanged: if (!visible) closeAllPopups()   // popups anchor to the bar
         anchors { top: true; left: true; right: true }
         implicitHeight: Theme.barHeight
         color: Theme.bg0
