@@ -1,5 +1,5 @@
 interpreter: /bin/sh
 
 startup:
-  - ghkd -b -c ~/.config/ghkd/config.yaml
-  - ~/.local/bin/wall.sh
+    - ghkd -b -c ~/.config/ghkd/config.yaml
+    - ~/.local/bin/wall.sh
