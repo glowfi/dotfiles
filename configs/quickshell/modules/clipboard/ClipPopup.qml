@@ -51,10 +51,19 @@ PanelWindow {
         anchors.margins: 14
         spacing: 6
 
-        Text {
-            text: "Clipboard history  (click to copy)"
-            color: Theme.purple
-            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+        RowLayout {
+            Layout.fillWidth: true
+            Text {
+                Layout.fillWidth: true
+                text: "Clipboard history  (click to copy)"
+                color: Theme.purple
+                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+            }
+            ActionChip {
+                label: "clear all"
+                enabled: Clip.clipEntries.length > 0
+                onClicked: Clip.wipeClip()
+            }
         }
 
         Rectangle {
@@ -114,13 +123,30 @@ PanelWindow {
                 Text {
                     anchors.fill: parent
                     anchors.leftMargin: 8
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: 34   // room for the delete button
                     verticalAlignment: Text.AlignVCenter
                     text: modelData.preview
                     color: Theme.fg
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
                     font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                }
+                Text {   // hover-revealed delete
+                    z: 2   // ABOVE the row's copy MouseArea (later siblings
+                           // stack higher; without this, clicks here landed
+                           // on the row -> copied + closed the popup)
+                    anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                    visible: clMa.containsMouse || delMa.containsMouse
+                    text: "󰅖"
+                    color: delMa.containsMouse ? Theme.red : Theme.fgDim
+                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                    MouseArea {
+                        id: delMa
+                        anchors.fill: parent
+                        anchors.margins: -6   // comfortable hit target
+                        hoverEnabled: true
+                        onClicked: Clip.deleteClip(modelData.cid)
+                    }
                 }
                 MouseArea {
                     id: clMa
