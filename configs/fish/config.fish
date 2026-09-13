@@ -299,6 +299,9 @@ function ccr
     conda create -n $envname python=$pyver -y
 end
 
+# Never sleep
+alias caffeine '"'(command -v systemd-inhibit; or command -v elogind-inhibit)'" --what=sleep:idle:handle-lid-switch sleep infinity'
+
 # ===================================================================
 #                           Custom Functions
 # ===================================================================
@@ -737,7 +740,7 @@ end
 function chooseTheme
     set chosen (printf "simple\nclassic\nminimal" | fzf)
     if test -n "$chosen"; and test "$runningOS" = Linux
-        sed -i "925s/.*/$chosen/" ~/.config/fish/config.fish
+        sed -i "927s/.*/$chosen/" ~/.config/fish/config.fish
         source ~/.config/fish/config.fish
     end
 end
