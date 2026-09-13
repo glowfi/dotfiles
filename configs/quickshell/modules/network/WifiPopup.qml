@@ -78,51 +78,99 @@ PanelWindow {
                 Repeater {
                     model: Net.wifiEnabled ? Net.wifiNets : []
                     ColumnLayout {
+                        id: netEntry
                         required property var modelData
+                        readonly property bool saved: Net.isSaved(modelData.ssid)
+                        readonly property bool busy: Net.wifiBusySsid === modelData.ssid
                         Layout.fillWidth: true
                         spacing: 4
+
                         Rectangle {
                             Layout.fillWidth: true
-                            implicitHeight: 38
+                            implicitHeight: 46
                             radius: 5
-                            color: modelData.inUse ? Theme.bg2 : (wnMa.containsMouse ? Theme.bg1 : "transparent")
+                            color: netEntry.modelData.inUse ? Theme.bg2
+                                 : netEntry.busy ? Theme.bg1
+                                 : (wnMa.containsMouse ? Theme.bg1 : "transparent")
+                            border.width: netEntry.busy ? 1 : 0
+                            border.color: Theme.yellow
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                            scale: wnMa.pressed ? 0.98 : 1
+                            Behavior on scale { NumberAnimation { duration: 80 } }
+
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 8
                                 anchors.rightMargin: 8
-                                spacing: 6
+                                spacing: 8
                                 Text {
-                                    text: Theme.wifiIcon(modelData.signal)
-                                    color: modelData.inUse ? Theme.green : Theme.fg
+                                    text: Theme.wifiIcon(netEntry.modelData.signal)
+                                    color: netEntry.modelData.inUse ? Theme.green : Theme.fg
                                     font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize + 5 }
                                 }
-                                Text {
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    text: modelData.ssid + (modelData.inUse ? "   (connected)" : "")
-                                    color: modelData.inUse ? Theme.green : Theme.fg
-                                    elide: Text.ElideRight
-                                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                                    spacing: 0
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: netEntry.modelData.ssid
+                                        color: netEntry.modelData.inUse ? Theme.green : Theme.fg
+                                        elide: Text.ElideRight
+                                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: {
+                                            if (netEntry.busy) return "connecting…";
+                                            if (netEntry.modelData.inUse) return "connected · right-click: forget";
+                                            if (netEntry.saved) return "saved — click to connect · right-click: forget";
+                                            if (netEntry.modelData.security !== "") return "secured — click to enter password";
+                                            return "open — click to connect";
+                                        }
+                                        color: netEntry.busy ? Theme.yellow : Theme.gray
+                                        elide: Text.ElideRight
+                                        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 4 }
+                                    }
                                 }
                                 Text {
-                                    visible: modelData.security !== ""
+                                    visible: netEntry.modelData.inUse
+                                    text: "󰄬"
+                                    color: Theme.green
+                                    Layout.preferredWidth: 22
+                                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+                                }
+                                Text {
+                                    visible: netEntry.modelData.security !== ""
                                     text: "󰌾"
-                                    color: Theme.gray
-                                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
+                                    color: netEntry.saved ? Theme.fgDim : Theme.gray
+                                    Layout.preferredWidth: 20
+                                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
                                 }
                             }
                             MouseArea {
                                 id: wnMa
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    if (modelData.inUse) return;
-                                    Net.wifiPwSsid = "";
-                                    Net.connectWifi(modelData.ssid, "");
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: ev => {
+                                    const d = netEntry.modelData;
+                                    if (ev.button === Qt.RightButton) {
+                                        if (netEntry.saved || d.inUse) Net.forgetWifi(d.ssid);
+                                        return;
+                                    }
+                                    if (d.inUse || netEntry.busy) return;
+                                    if (d.security !== "" && !netEntry.saved) {
+                                        // secured + unknown: ask for the password FIRST —
+                                        // the current connection is untouched until "join"
+                                        Net.wifiPwSsid = d.ssid;
+                                        return;
+                                    }
+                                    Net.connectWifi(d.ssid, "");
                                 }
                             }
                         }
                         RowLayout {
-                            visible: Net.wifiPwSsid === modelData.ssid
+                            visible: Net.wifiPwSsid === netEntry.modelData.ssid
                             Layout.fillWidth: true
                             spacing: 6
                             Rectangle {
@@ -131,7 +179,7 @@ PanelWindow {
                                 radius: 5
                                 color: Theme.bg1
                                 border.width: 1
-                                border.color: Theme.yellow
+                                border.color: pwInput.activeFocus ? Theme.yellow : Theme.bg2
                                 TextInput {
                                     id: pwInput
                                     anchors.fill: parent
@@ -142,13 +190,19 @@ PanelWindow {
                                     color: Theme.fg
                                     clip: true
                                     font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
-                                    onAccepted: Net.connectWifi(modelData.ssid, text)
+                                    onAccepted: Net.connectWifi(netEntry.modelData.ssid, text)
+                                    onVisibleChanged: if (visible) forceActiveFocus()
                                 }
                             }
                             ActionChip {
-                                label: "join"
+                                label: netEntry.busy ? "joining…" : "join"
                                 accent: true
-                                onClicked: Net.connectWifi(modelData.ssid, pwInput.text)
+                                enabled: !netEntry.busy
+                                onClicked: Net.connectWifi(netEntry.modelData.ssid, pwInput.text)
+                            }
+                            ActionChip {
+                                label: "󰅖"
+                                onClicked: Net.wifiPwSsid = ""
                             }
                         }
                     }

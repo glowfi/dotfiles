@@ -15,6 +15,35 @@ Singleton {
     property bool wifiScanning: false
     property string wifiError: ""
     property string wifiPwSsid: ""     // ssid currently asking for a password
+    property string wifiBusySsid: ""   // ssid with a connection attempt in flight
+    property var savedProfiles: []     // wifi connection profiles NM already knows
+
+    function isSaved(ssid) { return savedProfiles.indexOf(ssid) !== -1 }
+
+    Process {
+        id: savedCheck
+        command: ["sh", "-c",
+            "nmcli -t -e no -f NAME,TYPE connection show 2>/dev/null | " +
+            "awk -F: '$2 ~ /wireless/ { print $1 }'"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: savedProfiles = text.trim() === "" ? [] : text.trim().split("\n")
+        }
+    }
+
+    function forgetWifi(ssid) {
+        Quickshell.execDetached(["nmcli", "connection", "delete", "id", ssid]);
+        forgetRefresh.restart();
+    }
+    Timer {
+        id: forgetRefresh; interval: 700
+        onTriggered: { savedCheck.running = true; netRecheck.start(); wifiScan.running = true }
+    }
+    Timer {   // errors don't linger after being read
+        id: errClear; interval: 8000
+        onTriggered: wifiError = ""
+    }
+    onWifiErrorChanged: if (wifiError !== "") errClear.restart()
 
     Process {
         id: netCheck
@@ -50,8 +79,10 @@ Singleton {
     Timer { id: netRecheck; interval: 800; onTriggered: { radioCheck.running = true; netCheck.running = true; ssidCheck.running = true } }
 
     function scanWifi() {
+        wifiError = "";
         wifiScanning = true;
         wifiScan.running = true;
+        savedCheck.running = true;
     }
     Process {
         id: wifiScan
@@ -87,18 +118,21 @@ Singleton {
                            : ["nmcli", "dev", "wifi", "connect", ssid, "password", pw]
         stderr: StdioCollector { onStreamFinished: wifiError = text.trim() }
         onExited: exitCode => {
+            wifiBusySsid = "";
             if (exitCode !== 0) {
-                wifiPwSsid = wifiConn.ssid;   // likely needs a password
+                wifiPwSsid = wifiConn.ssid;   // likely needs a (correct) password
             } else {
                 wifiPwSsid = "";
                 wifiError = "";
             }
             netRecheck.start();
+            savedCheck.running = true;
             wifiScan.running = true;
         }
     }
     function connectWifi(ssid, pw) {
         wifiError = "";
+        wifiBusySsid = ssid;
         wifiConn.ssid = ssid;
         wifiConn.pw = pw;
         wifiConn.running = true;
