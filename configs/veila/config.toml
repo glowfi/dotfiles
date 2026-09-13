@@ -1,0 +1,49 @@
+theme = "default"
+
+[background]
+mode = "file"
+scaling = "fill"
+dim_strength = 40
+blur_strength = 0
+
+[background.slideshow]
+enabled = true
+directory = "~/wall"
+mode = "timed"
+order = "random"
+change_every_seconds = 60
+
+[battery]
+enabled = true
+refresh_seconds = 30
+
+[visuals.clock]
+enabled = true
+format = "24h"
+font_family = "Fantasque Sans Mono"
+font_weight = 700
+font_size = 88
+color = "#ebdbb2"
+halign = "center"
+valign = "top"
+y = 40
+
+[visuals.date]
+enabled = true
+format = "long"
+font_family = "Fantasque Sans Mono"
+font_weight = 700
+font_size = 18
+color = "#d5c4a1"
+halign = "center"
+valign = "top"
+y = 140
+
+[visuals.battery]
+enabled = true
+color = "#ebdbb2"
+background_color = "#28282899"
+halign = "right"
+valign = "top"
+x = -24
+y = 17
