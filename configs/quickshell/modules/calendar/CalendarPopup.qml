@@ -74,9 +74,9 @@ PopupWindow {
                     anchors.centerIn: parent
                     text: {
                         if (calPopup.mode === "days")
-                            return Qt.locale().monthName(calPopup.viewMonth) + " " + calPopup.viewYear;
+                            return Qt.locale().monthName(calPopup.viewMonth) + " " + calPopup.viewYear + "  ▾";
                         if (calPopup.mode === "months")
-                            return calPopup.viewYear;
+                            return calPopup.viewYear + "  ▾";
                         const base = calPopup.viewYear - 5 + calPopup.yearPage * 12;
                         return base + " – " + (base + 11);
                     }

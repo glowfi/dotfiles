@@ -150,7 +150,7 @@ Scope {
             }
 
             BarButton {   // clock -> modules/calendar
-                text: Qt.formatDateTime(Clock.date, "ddd dd MMM  HH:mm")
+                text: Qt.formatDateTime(Clock.date, "ddd dd MMM  h:mm AP")
                 fgColor: Theme.fg
                 onClicked: bar.togglePopup(calPopup)
             }
