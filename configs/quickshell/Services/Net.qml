@@ -31,6 +31,17 @@ Singleton {
         }
     }
 
+    function disconnectWifi(ssid) {
+        // device-level disconnect; failures surface as notifications instead
+        // of vanishing into execDetached
+        Quickshell.execDetached(["sh", "-c",
+            "dev=$(nmcli -t -e no -f DEVICE,TYPE device status 2>/dev/null" +
+            " | grep \":wifi$\" | head -1 | cut -d: -f1);" +
+            " if [ -z \"$dev\" ]; then notify-send \"wifi\" \"no wifi device found\"; exit 1; fi;" +
+            " out=$(nmcli device disconnect \"$dev\" 2>&1)" +
+            " || notify-send \"wifi disconnect failed\" \"$out\""]);
+        forgetRefresh.restart();
+    }
     function forgetWifi(ssid) {
         Quickshell.execDetached(["nmcli", "connection", "delete", "id", ssid]);
         forgetRefresh.restart();

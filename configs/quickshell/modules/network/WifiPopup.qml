@@ -122,7 +122,7 @@ PanelWindow {
                                         Layout.fillWidth: true
                                         text: {
                                             if (netEntry.busy) return "connecting…";
-                                            if (netEntry.modelData.inUse) return "connected · right-click: forget";
+                                            if (netEntry.modelData.inUse) return "connected — click to disconnect · right-click: forget";
                                             if (netEntry.saved) return "saved — click to connect · right-click: forget";
                                             if (netEntry.modelData.security !== "") return "secured — click to enter password";
                                             return "open — click to connect";
@@ -158,7 +158,8 @@ PanelWindow {
                                         if (netEntry.saved || d.inUse) Net.forgetWifi(d.ssid);
                                         return;
                                     }
-                                    if (d.inUse || netEntry.busy) return;
+                                    if (netEntry.busy) return;
+                                    if (d.inUse) { Net.disconnectWifi(d.ssid); return; }
                                     if (d.security !== "" && !netEntry.saved) {
                                         // secured + unknown: ask for the password FIRST —
                                         // the current connection is untouched until "join"
