@@ -132,18 +132,7 @@ keybindings:
     - name: Night Color
       keys: super+r
       interpreter: bash
-      script: |
-          STATE="${XDG_STATE_HOME:-$HOME/.local/state}/nightlight"
-          mkdir -p "${STATE%/*}"
-          if [ -e "$STATE" ]; then
-              rm -f "$STATE"
-              pkill -x wlsunset
-              swayosd-client --custom-message "Night mode off" --custom-icon weather-clear-symbolic
-          else
-              touch "$STATE"
-              setsid wlsunset -t 4000 -T 4001 >/dev/null 2>&1 &
-              swayosd-client --custom-message "Night mode on" --custom-icon weather-clear-night-symbolic
-          fi
+      script: qs ipc call night toggle
 
     - name: EasyEffects Toggle
       keys: alt+g
