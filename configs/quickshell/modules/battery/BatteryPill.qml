@@ -15,7 +15,15 @@ StatusPill {
     icon: bat ? Theme.batIcon(bat.percentage * 100, charging) : "󰁹"
     iconColor: charging ? Theme.aqua
              : (bat && bat.percentage < 0.2 ? Theme.red : Theme.green)
-    value: bat ? Math.round(bat.percentage * 100) + "%" : ""
-    tooltip: "battery & power profile"
+    // current power profile at a glance
+    readonly property string profLabel:
+        PowerProfiles.profile === PowerProfile.PowerSaver ? "saver"
+        : PowerProfiles.profile === PowerProfile.Performance ? "perf" : "bal"
+    value: (bat ? Math.round(bat.percentage * 100) + "%" : "") + " · " + profLabel
+    tooltip: {
+        const p = PowerProfiles.profile === PowerProfile.PowerSaver ? "power saver"
+                : PowerProfiles.profile === PowerProfile.Performance ? "performance" : "balanced";
+        return "battery — profile: " + p;
+    }
     onClicked: bar.togglePopupAt(popup, batteryPill)
 }
