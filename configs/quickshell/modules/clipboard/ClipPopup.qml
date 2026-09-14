@@ -12,8 +12,8 @@ PanelWindow {
     id: clipPopup
     required property var bar
     screen: bar.screen
-    anchors { top: true; right: true }
-    margins { top: Theme.barHeight + 4; right: 8 }
+    anchors { top: true; left: true }
+    margins { top: Theme.barHeight + 4; left: 8 }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand

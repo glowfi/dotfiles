@@ -117,12 +117,13 @@ Scope {
             Tray { bar: bar; menuPopup: trayMenuPopup }
 
             BarButton {   // clipboard -> modules/clipboard
+                id: clipBtn
                 text: "󰅍"
                 px: Theme.iconSize
                 fgColor: Theme.fg0
                 onClicked: {
-                    bar.togglePopup(clipPopup);
-                    if (clipPopup.visible) {
+                    bar.togglePopupAt(clipPopup, clipBtn);   // under the icon,
+                    if (clipPopup.visible) {                 // like every other popup
                         Clip.refreshClip();
                         clipPopup.focusSearch();
                     }
