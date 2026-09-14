@@ -7,9 +7,9 @@ import Quickshell.Services.Pipewire
 Singleton {
     id: osdSvc
 
-    // Volume OSD fires automatically on any pipewire volume/mute change
-    // (hardware keys, wpctl, this shell). Brightness keys should call the
-    // IPC below so the OSD shows:   qs ipc call osd brightnessUp
+    // Volume changes show NO shell OSD (an external OSD tool owns that).
+    // Brightness keys call the IPC below to show the brightness OSD:
+    //   qs ipc call osd brightnessUp
     property string osdKind: "volume"
     property bool osdShown: false
     property bool osdSuppressed: false     // no OSD while quick settings is open
@@ -25,11 +25,6 @@ Singleton {
 
     PwObjectTracker { objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource] }
 
-    Connections {
-        target: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
-        function onVolumeChanged() { showOsd("volume") }
-        function onMutedChanged() { showOsd("volume") }
-    }
 
     IpcHandler {
         target: "osd"
