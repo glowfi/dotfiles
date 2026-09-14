@@ -68,6 +68,19 @@ fi`]
 
     // ================= brightness (brightnessctl) =================
     property int brightness: -1
+    // external brightness changes (hotkey daemons writing via brightnessctl)
+    // arrive as kernel udev events on the backlight subsystem — re-read on
+    // each so the bar reflects them instantly, like pipewire pushes volume
+    Process {
+        command: ["sh", "-c", "stdbuf -oL udevadm monitor -k -s backlight"]
+        running: true
+        stdout: SplitParser { onRead: briKick.restart() }
+    }
+    Timer { id: briKick; interval: 120; onTriggered: briGet.running = true }
+    // fallback: fast poll in case the udev path is unavailable — a sysfs
+    // read every 2s is effectively free
+    Timer { interval: 2000; running: true; repeat: true; onTriggered: briGet.running = true }
+
     Process {
         id: briGet
         command: ["sh", "-c", "brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d %"]
