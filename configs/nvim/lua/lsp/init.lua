@@ -95,7 +95,7 @@ vim.lsp.enable({
 	"pyright",
 	"rust_analyzer",
 	"gopls",
-	-- "zls",
+	"zls",
 	"clangd",
 	"lua_ls",
 	"html",
