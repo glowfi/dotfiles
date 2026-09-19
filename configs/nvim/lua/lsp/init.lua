@@ -107,6 +107,23 @@ vim.lsp.enable({
 	"ls_emmet",
 })
 
+-- Zig
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = vim.api.nvim_create_augroup("nvim/zig-fmt", { clear = true }),
+	pattern = { "*.zig", "*.zon" },
+	callback = function(ev)
+		vim.lsp.buf.format({
+			bufnr = ev.buf,
+			filter = function(c)
+				return c.name == "zls"
+			end,
+		})
+	end,
+})
+
+-- Typescript
+
 local status_ok, tstools = pcall(require, "typescript-tools")
 if not status_ok then
 	return
