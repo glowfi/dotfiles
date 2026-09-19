@@ -82,3 +82,5 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 vim.keymap.set("n", "<C-/>", "gcc", { remap = true, desc = "Toggle comment" })
 vim.keymap.set("v", "<C-/>", "gc", { remap = true, desc = "Toggle comment" })
+vim.keymap.set("n", "<C-_>", "gcc", { remap = true, desc = "Toggle comment" })
+vim.keymap.set("v", "<C-_>", "gc", { remap = true, desc = "Toggle comment" })
