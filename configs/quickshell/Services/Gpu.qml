@@ -13,10 +13,11 @@ Singleton {
 
     readonly property var sel: gpus.length > selected ? gpus[selected] : null
 
-    // GiB in, honest string out: sub-GiB cards show MiB, no fake rounding
-    function fmtG(v) {
-        if (v < 1) return Math.round(v * 1024) + "M";
-        return (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + "G";
+    // GiB in, honest string out: sub-GiB shows MiB, no fake rounding
+    function fmtG(g) {
+        if (g < 0) return "--";
+        if (g < 1) return Math.round(g * 1024) + "M";
+        return (g >= 10 ? g.toFixed(0) : g.toFixed(1)) + "G";
     }
 
     function vendorName(v) {
@@ -57,8 +58,6 @@ Singleton {
                     }
                     if (p.length < 5) continue;
                     let pretty = (parts[1] ?? "").trim();
-                    // lspci device names embed the marketing name in brackets;
-                    // prefer it: "Navi 33 [Radeon RX 7700S]" -> "Radeon RX 7700S"
                     const bm = pretty.match(/\[([^\]]+)\][^\[]*$/);
                     if (bm) pretty = bm[1];
                     out.push({

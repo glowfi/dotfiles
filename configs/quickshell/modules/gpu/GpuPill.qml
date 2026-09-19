@@ -9,15 +9,15 @@ StatusPill {
 
     visible: Gpu.gpus.length > 0
     icon: "󰢮"
-    iconPx: Theme.iconSize + 3   // this glyph renders visually smaller than peers
     iconColor: Theme.fg0
+    iconPx: Theme.iconSize + 3
     value: {
         const g = Gpu.sel;
         if (!g) return "";
-        const stat = g.vramTotal > 0
-                     ? Gpu.fmtG(g.vramUsed) + "/" + Gpu.fmtG(g.vramTotal)
-                     : (g.busy >= 0 ? g.busy + "%" : "--");
-        return stat + (Gpu.gpus.length > 1 ? " · " + Gpu.vendorName(g.vendor) : "");
+        const vram = g.vramTotal > 0 ? Gpu.fmtG(g.vramUsed) + "/" + Gpu.fmtG(g.vramTotal) : "";
+        const busy = g.busy >= 0 ? g.busy + "%" : "--";
+        return busy + (vram !== "" ? " · " + vram : "")
+             + (Gpu.gpus.length > 1 ? " · " + Gpu.vendorName(g.vendor) : "");
     }
     tooltip: "gpu — click for details" + (Gpu.gpus.length > 1 ? " & switching" : "")
     onClicked: bar.togglePopupAt(popup, gpuPill)

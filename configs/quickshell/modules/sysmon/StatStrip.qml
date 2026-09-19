@@ -1,18 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
-import Quickshell
 import "../../Services"
 import "../../Widgets"
 
+// The original SysChip visuals, display-only: no popup, no click, no btop.
 Rectangle {
-    required property var bar
-    required property var popup
-    id: sysChip
+    id: statStrip
     implicitWidth: chipRow.implicitWidth + 20
     implicitHeight: 30
     radius: 4
-    color: chipMa.containsMouse ? Theme.bg1 : "transparent"
+    color: "transparent"
 
     RowLayout {
         id: chipRow
@@ -29,17 +26,4 @@ Rectangle {
         ChipStat { icon: "󰇚"; value: SysMon.fmtRateShort(SysMon.netRx) }
         ChipStat { icon: "󰕒"; value: SysMon.fmtRateShort(SysMon.netTx) }
     }
-    MouseArea {
-        id: chipMa
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: ev => {
-            if (ev.button === Qt.RightButton) bar.togglePopupAt(popup, sysChip);
-            else Quickshell.execDetached(["kitty", "--class", "btop", "-e", "btop"]);
-        }
-    }
-    ToolTip.visible: chipMa.containsMouse
-    ToolTip.text: "click: btop · right-click: system info"
-    ToolTip.delay: 700
 }

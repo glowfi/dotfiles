@@ -9,7 +9,7 @@ everything renders in-shell; CLIs run silently as backends.
 	layout          click picker / right cycle / middle float
 	media           MPRIS popup: cover art, seek, transport
 	tray            SNI, in-shell menus, passive items hidden
-	sysmon          cpu ram disk net; btop on click
+	sysmon          inline cpu mem disk net (display only)
 	gpu             per-card busy + vram, multi-gpu switch
 	wifi            scan, connect, inline password
 	bluetooth       pair, connect, forget, battery
@@ -28,7 +28,7 @@ everything renders in-shell; CLIs run silently as backends.
 
 	quickshell mango ttf-nerd-fonts-symbols papirus-icon-theme
 	networkmanager cliphist wl-clipboard wlsunset brightnessctl
-	power-profiles-daemon wlr-randr pciutils awww kitty btop
+	power-profiles-daemon wlr-randr pciutils awww kitty
 
 	systemctl enable --now power-profiles-daemon
 

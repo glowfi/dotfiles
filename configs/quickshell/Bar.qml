@@ -60,15 +60,15 @@ Scope {
         // ---- popup management: one open at a time ----
         readonly property var allPopups: [
             layoutPopup, wifiPopup, btPopup, audioPopup,
-            displayPopup, batteryPopup, sysPopup, gpuPopup, notifPopup,
-            clipPopup, calPopup, mediaPopup, wallpaperPopup, trayMenuPopup]
+            displayPopup, batteryPopup, notifPopup,
+            clipPopup, calPopup, mediaPopup, wallpaperPopup, gpuPopup, trayMenuPopup]
         readonly property bool anyPopupOpen:
             layoutPopup.visible || wifiPopup.visible
             || btPopup.visible || audioPopup.visible || displayPopup.visible
-            || batteryPopup.visible || sysPopup.visible || gpuPopup.visible
+            || batteryPopup.visible
             || notifPopup.visible
             || clipPopup.visible || calPopup.visible || mediaPopup.visible
-            || wallpaperPopup.visible || trayMenuPopup.visible
+            || wallpaperPopup.visible || gpuPopup.visible || trayMenuPopup.visible
         onAnyPopupOpenChanged: OsdSvc.osdSuppressed = anyPopupOpen
         function closeAllPopups() {
             // defensive: one failed-to-load popup must not brick every click
@@ -77,13 +77,23 @@ Scope {
             }
         }
         function togglePopup(p) {
-            if (!p) { console.warn("togglePopup: popup failed to load"); return; }
+            if (!p) {
+                // a null popup means its QML file failed to load — surface
+                // that instead of failing silently
+                Quickshell.execDetached(["notify-send", "shell",
+                    "a popup failed to load — run qs from a terminal for the error"]);
+                return;
+            }
             const wasOpen = p.visible;
             closeAllPopups();
             p.visible = !wasOpen;
         }
         function togglePopupAt(p, item) {
-            if (!p || !item) { console.warn("togglePopupAt: missing popup/item"); return; }
+            if (!p || !item) {
+                Quickshell.execDetached(["notify-send", "shell",
+                    "a popup failed to load — run qs from a terminal for the error"]);
+                return;
+            }
             const x = item.mapToItem(null, 0, 0).x;
             p.margins.left = Math.max(8, Math.min(x, bar.width - p.implicitWidth - 8));
             togglePopup(p);
@@ -99,8 +109,7 @@ Scope {
 
             // -------- left cluster --------
             Tags { bar: bar }
-
-            BarButton {   // layout -> modules/layouts
+        BarButton {   // layout -> modules/layouts
                 text: bar.mLayoutSym
                 fgColor: Theme.green
                 tooltip: "layout (click: picker, right: cycle, middle: toggle float)"
@@ -112,11 +121,17 @@ Scope {
             Item { Layout.fillWidth: true }   // spacer
 
             // -------- right cluster --------
-            SysChip { bar: bar; popup: sysPopup }
+            StatStrip {}
             GpuPill { bar: bar; popup: gpuPopup }
-            Tray { bar: bar; menuPopup: trayMenuPopup }
+            MediaPill { bar: bar; popup: mediaPopup }
+            AudioPill { bar: bar; popup: audioPopup }
+            BtPill { bar: bar; popup: btPopup }
+            DisplayPill { bar: bar; popup: displayPopup }
+            WallpaperPill { bar: bar; popup: wallpaperPopup }
+            WifiPill { bar: bar; popup: wifiPopup }
+            BatteryPill { bar: bar; popup: batteryPopup }
 
-            BarButton {   // clipboard -> modules/clipboard
+        BarButton {   // clipboard -> modules/clipboard
                 id: clipBtn
                 text: "󰅍"
                 px: Theme.iconSize
@@ -129,16 +144,7 @@ Scope {
                     }
                 }
             }
-
-            MediaPill { bar: bar; popup: mediaPopup }
-            AudioPill { bar: bar; popup: audioPopup }
-            BtPill { bar: bar; popup: btPopup }
-            DisplayPill { bar: bar; popup: displayPopup }
-            WallpaperPill { bar: bar; popup: wallpaperPopup }
-            WifiPill { bar: bar; popup: wifiPopup }
-            BatteryPill { bar: bar; popup: batteryPopup }
-
-            BarButton {   // bell -> modules/notifications
+        BarButton {   // bell -> modules/notifications
                 // glyph-only states (DND, empty bell) render at full icon size;
                 // the smaller size only existed to fit the count next to the bell
                 px: (NotifSvc.doNotDisturb || NotifSvc.notifHistory.count === 0)
@@ -151,23 +157,23 @@ Scope {
                 onClicked: bar.togglePopup(notifPopup)
                 onRightClicked: NotifSvc.doNotDisturb = !NotifSvc.doNotDisturb
             }
-
+            Tray { bar: bar; menuPopup: trayMenuPopup }
             BarButton {   // clock -> modules/calendar
+                id: clockBtn
                 text: Qt.formatDateTime(Clock.date, "ddd dd MMM  h:mm AP")
                 fgColor: Theme.fg
-                onClicked: bar.togglePopup(calPopup)
+                onClicked: bar.togglePopupAt(calPopup, clockBtn)
             }
         }
 
         // ---- popups (one file each under modules/) ----
         LayoutPopup { id: layoutPopup; bar: bar }
         WifiPopup { id: wifiPopup; bar: bar }
+        GpuPopup { id: gpuPopup; bar: bar }
         BtPopup { id: btPopup; bar: bar }
         AudioPopup { id: audioPopup; bar: bar }
         DisplayPopup { id: displayPopup; bar: bar }
         BatteryPopup { id: batteryPopup; bar: bar }
-        SysPopup { id: sysPopup; bar: bar }
-        GpuPopup { id: gpuPopup; bar: bar }
         NotifCenter { id: notifPopup; bar: bar }
         ClipPopup { id: clipPopup; bar: bar }
         CalendarPopup { id: calPopup; bar: bar }

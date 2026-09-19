@@ -2,15 +2,18 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Wayland
 import "../../Services"
 import "../../Widgets"
 
-PopupWindow {
+PanelWindow {
     required property var bar
     id: calPopup
-    anchor.window: bar
-    anchor.rect.x: bar.width - 400
-    anchor.rect.y: Theme.barHeight
+    screen: bar.screen
+    anchors { top: true; left: true }
+    margins { top: Theme.barHeight + 4; left: 8 }
+    exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.layer: WlrLayer.Overlay
     implicitWidth: 390
     implicitHeight: 420
     visible: false

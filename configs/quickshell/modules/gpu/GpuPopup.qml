@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import "../../Services"
@@ -18,7 +19,6 @@ PanelWindow {
     visible: false
     color: "transparent"
 
-    // popup surface: rounded + hairline border (windows are transparent)
     Rectangle {
         anchors.fill: parent
         radius: 10
@@ -54,7 +54,6 @@ PanelWindow {
                         anchors.leftMargin: 8
                         anchors.rightMargin: 8
                         Text {
-                            id: gpuNameText
                             Layout.fillWidth: true
                             text: gpuEntry.modelData.name
                             color: gpuEntry.current ? Theme.fg0 : Theme.fg
