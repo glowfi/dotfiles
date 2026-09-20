@@ -11,7 +11,10 @@ PanelWindow {
     required property var bar
     id: btPopup
     WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    onVisibleChanged: if (visible) BtCtl.refreshKnown()
+    onVisibleChanged: if (visible) {
+        BtCtl.refreshKnown();
+        BtCtl.scan();   // fresh results on open; chip shows the countdown
+    }
 
     function fuzzy(hay, q) {
         hay = hay.toLowerCase(); q = q.toLowerCase();
@@ -61,12 +64,14 @@ PanelWindow {
             }
             ActionChip {
                 readonly property var a: Bluetooth.defaultAdapter
-                label: BtCtl.scanning || (a && a.discovering) ? "scanning…" : "󰑐 scan"
+                // OUR scan state only: adapter.discovering is BlueZ-global —
+                // true whenever ANY client scans (blueman-applet etc.), and we
+                // can't stop other clients' sessions, so binding the label to
+                // it means "scanning…" whenever anything else scans. Devices
+                // their scans find still appear in our list regardless.
+                label: BtCtl.scanning ? "scanning…" : "󰑐 scan"
                 enabled: a !== null && a.enabled && !BtCtl.scanning
-                onClicked: {
-                    BtCtl.scan();                                // reliable CLI path
-                    try { a.discovering = true; } catch (e) {}   // best-effort native
-                }
+                onClicked: BtCtl.scan()
             }
         }
 
@@ -118,7 +123,9 @@ PanelWindow {
                             if (!a || !a.enabled) return [];
                             return [...a.devices.values]
                                 .filter(d => d.paired || d.connected || (d.name ?? "") !== "")
-                                .sort((x, y) => (y.connected - x.connected) || ((y.paired || (y.bonded ?? false)) - (x.paired || (x.bonded ?? false)))).filter(d => btSearch.text === ""
+                                .sort((x, y) => (y.connected - x.connected)
+                                      || ((y.paired || (y.bonded ?? false)) - (x.paired || (x.bonded ?? false))))
+                                .filter(d => btSearch.text === ""
                                      || btPopup.fuzzy((d.name || d.deviceName || d.address || ""), btSearch.text));
                         }
                     }
@@ -209,6 +216,16 @@ PanelWindow {
                             }
                         }
                     }
+                }
+                Text {
+                    visible: {
+                        const a = Bluetooth.defaultAdapter;
+                        return a && a.enabled && BtCtl.scanning
+                               && a.devices.values.length === 0;
+                    }
+                    text: "scanning for devices…"
+                    color: Theme.gray
+                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
                 }
                 Text {
                     Layout.fillWidth: true

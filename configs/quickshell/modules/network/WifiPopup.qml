@@ -15,6 +15,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    onVisibleChanged: if (visible) Net.scanWifi()   // fresh results on open
 
     // subsequence fuzzy match (same as clipboard search)
     function fuzzy(hay, q) {
@@ -247,6 +248,13 @@ PanelWindow {
                             }
                         }
                     }
+                }
+                Text {
+                    visible: Net.wifiEnabled && Net.wifiScanning
+                             && Net.wifiNets.length === 0
+                    text: "scanning for networks…"
+                    color: Theme.gray
+                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
                 }
                 Text {
                     visible: !Net.wifiEnabled

@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Bluetooth
 
 // Bluetooth control on PROVEN primitives only (execDetached one-shots — the
 // bluetoothctl log confirmed these execute):
@@ -70,7 +71,19 @@ Singleton {
             "bluetoothctl --timeout 12 scan on >/dev/null 2>&1"]);
         scanOff.restart();
     }
-    Timer { id: scanOff; interval: 12500; onTriggered: btCtl.scanning = false }
+    Timer {
+        id: scanOff
+        interval: 12500
+        onTriggered: {
+            btCtl.scanning = false;
+            // a natively-started discovery has no owner to stop it — end any
+            // lingering one so "scanning…" cannot stick forever
+            const ad = Bluetooth.defaultAdapter;
+            if (ad && ad.discovering) {
+                try { ad.discovering = false; } catch (e) {}
+            }
+        }
+    }
 
     // sticky session union of everything BlueZ ever listed as paired/bonded
     function refreshKnown() { knownProc.running = true }
