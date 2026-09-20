@@ -10,7 +10,15 @@ import Quickshell.Bluetooth
 PanelWindow {
     required property var bar
     id: btPopup
+    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     onVisibleChanged: if (visible) BtCtl.refreshKnown()
+
+    function fuzzy(hay, q) {
+        hay = hay.toLowerCase(); q = q.toLowerCase();
+        let i = 0;
+        for (const c of q) { i = hay.indexOf(c, i); if (i < 0) return false; i++; }
+        return true;
+    }
     screen: bar.screen
     anchors { top: true; left: true }
     margins { top: Theme.barHeight + 4; left: 8 }
@@ -62,6 +70,34 @@ PanelWindow {
             }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 30
+            radius: 5
+            color: Theme.bg1
+            border.width: 1
+            border.color: btSearch.activeFocus ? Theme.yellow : Theme.bg2
+            TextInput {
+                id: btSearch
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                verticalAlignment: TextInput.AlignVCenter
+                color: Theme.fg
+                clip: true
+                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                Keys.onEscapePressed: { if (text !== "") text = ""; else btPopup.visible = false }
+            }
+            Text {
+                anchors.fill: btSearch
+                verticalAlignment: Text.AlignVCenter
+                visible: btSearch.text === "" && !btSearch.activeFocus
+                text: "search devices…"
+                color: Theme.gray
+                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+            }
+        }
+
         Flickable {
             id: btFlick
             Layout.fillWidth: true
@@ -82,7 +118,8 @@ PanelWindow {
                             if (!a || !a.enabled) return [];
                             return [...a.devices.values]
                                 .filter(d => d.paired || d.connected || (d.name ?? "") !== "")
-                                .sort((x, y) => (y.connected - x.connected) || ((y.paired || (y.bonded ?? false)) - (x.paired || (x.bonded ?? false))));
+                                .sort((x, y) => (y.connected - x.connected) || ((y.paired || (y.bonded ?? false)) - (x.paired || (x.bonded ?? false)))).filter(d => btSearch.text === ""
+                                     || btPopup.fuzzy((d.name || d.deviceName || d.address || ""), btSearch.text));
                         }
                     }
                     Rectangle {

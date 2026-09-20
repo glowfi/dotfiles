@@ -3,6 +3,10 @@ import QtQuick.Controls
 import "../Services"
 
 Rectangle {
+    id: barBtnRoot
+    // attached properties are only valid unqualified in the owner's scope —
+    // capture the window here, use the captured ref everywhere else
+    readonly property var winRef: Window.window
     property string text
     property color fgColor: Theme.fg
     property string tooltip: ""
@@ -26,28 +30,21 @@ Rectangle {
         id: btnMa
         anchors.fill: parent
         hoverEnabled: true
+        onContainsMouseChanged: if (!containsMouse) TipSvc.hide()
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onPressed: TipSvc.hide()
         onClicked: ev => {
             if (ev.button === Qt.RightButton) parent.rightClicked();
             else if (ev.button === Qt.MiddleButton) parent.middleClicked();
             else parent.clicked();
         }
     }
-    ToolTip {
-        visible: tooltip !== "" && btnMa.containsMouse
-        text: tooltip
-        delay: 600
-        padding: 8
-        background: Rectangle {
-            color: Theme.bg0h
-            radius: 6
-            border.width: 1
-            border.color: Theme.bg2
-        }
-        contentItem: Text {
-            text: tooltip
-            color: Theme.fg
-            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
-        }
+    Timer {
+        interval: 600
+        running: btnMa.containsMouse && tooltip !== ""
+        onTriggered: TipSvc.show(barBtnRoot.tooltip,
+            barBtnRoot.mapToItem(null, 0, 0).x + barBtnRoot.width / 2,
+            barBtnRoot.winRef && barBtnRoot.winRef.screen
+                ? barBtnRoot.winRef.screen.name : "")
     }
 }

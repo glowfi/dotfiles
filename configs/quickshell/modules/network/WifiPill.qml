@@ -13,7 +13,9 @@ StatusPill {
     iconColor: Net.netIface === "" ? Theme.red : Theme.green
     value: Net.netIface === "" ? "off"
          : (Net.netIface.startsWith("w")
-            ? (Net.netSsid !== "" ? Net.netSsid : Net.netIface)
+            ? (Net.netSsid !== "" ? Net.netSsid : "connected")   // never the
+              // route iface: under a VPN that's the tunnel device's
+              // auto-generated name (the "weird numbers")
             : Net.netIface)
     maxValueWidth: 150
     tooltip: "network"

@@ -26,6 +26,7 @@ RowLayout {
         model: SystemTray.items
         Item {
             id: trayItem
+            readonly property var winRef: Window.window
             required property var modelData
             // hide Passive items: apps register helper SNIs (mic/recording
             // indicators etc.) as Passive, meaning "exists, don't display"
@@ -47,6 +48,7 @@ RowLayout {
             }
             MouseArea {
                 id: trayItemMa
+                onContainsMouseChanged: if (!containsMouse) TipSvc.hide()
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
@@ -63,22 +65,15 @@ RowLayout {
                     }
                 }
             }
-            ToolTip {
-                visible: trayItemMa.containsMouse
-                delay: 800
-                padding: 8
-                background: Rectangle {
-                    color: Theme.bg0h
-                    radius: 6
-                    border.width: 1
-                    border.color: Theme.bg2
-                }
-                contentItem: Text {
-                    text: trayItem.modelData.tooltipTitle || trayItem.modelData.title
-                          || trayItem.modelData.id || "tray item"
-                    color: Theme.fg
-                    font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
-                }
+            Timer {
+                interval: 800
+                running: trayItemMa.containsMouse
+                onTriggered: TipSvc.show(
+                    trayItem.modelData.tooltipTitle || trayItem.modelData.title
+                    || trayItem.modelData.id || "tray item",
+                    trayItem.mapToItem(null, 0, 0).x + trayItem.width / 2,
+                    trayItem.winRef && trayItem.winRef.screen
+                        ? trayItem.winRef.screen.name : "")
             }
         }
     }

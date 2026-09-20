@@ -10,11 +10,16 @@
 import Quickshell
 import "modules/notifications"
 import "modules/osd"
+import "modules/tooltip"
 
 ShellRoot {
     Variants {
         model: Quickshell.screens
         Bar {}
+    }
+    Variants {
+        model: Quickshell.screens
+        TipWindow {}
     }
 
     Toasts {}

@@ -17,13 +17,14 @@ Rectangle {
         spacing: 12
 
         ChipStat {
+            tooltip: "cpu usage · clock"
             icon: "󰻠"
             value: Math.round(SysMon.cpuPct) + "%"
                    + (SysMon.cpuMhz > 0 ? " " + (SysMon.cpuMhz / 1000).toFixed(1) + "GHz" : "")
         }
-        ChipStat { icon: "󰍛"; value: SysMon.memUsedG.toFixed(1) + "/" + SysMon.memTotalG.toFixed(0) + "G" }
-        ChipStat { icon: "󰋊"; value: SysMon.diskUsed + "/" + SysMon.diskAvail }
-        ChipStat { icon: "󰇚"; value: SysMon.fmtRateShort(SysMon.netRx) }
-        ChipStat { icon: "󰕒"; value: SysMon.fmtRateShort(SysMon.netTx) }
+        ChipStat { tooltip: "memory used / total"; icon: "󰍛"; value: SysMon.memUsedG.toFixed(1) + "/" + SysMon.memTotalG.toFixed(0) + "G" }
+        ChipStat { tooltip: "disk used / free"; icon: "󰋊"; value: SysMon.diskUsed + "/" + SysMon.diskAvail }
+        ChipStat { tooltip: "net download"; icon: "󰇚"; value: SysMon.fmtRateShort(SysMon.netRx) }
+        ChipStat { tooltip: "net upload"; icon: "󰕒"; value: SysMon.fmtRateShort(SysMon.netTx) }
     }
 }

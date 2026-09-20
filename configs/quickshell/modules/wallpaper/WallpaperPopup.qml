@@ -81,6 +81,7 @@ PanelWindow {
                     }
                     MouseArea {
                         id: thumbMa
+                        onContainsMouseChanged: if (!containsMouse) parent.parent._tipUp = false
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
@@ -88,20 +89,32 @@ PanelWindow {
                             wallPopup.visible = false;
                         }
                     }
-                    ToolTip {
-                        visible: thumbMa.containsMouse
-                        delay: 700
-                        padding: 8
-                        background: Rectangle {
-                            color: Theme.bg0h
-                            radius: 6
-                            border.width: 1
-                            border.color: Theme.bg2
-                        }
-                        contentItem: Text {
+                    property bool _tipUp: false
+                    Timer {
+                        interval: 700
+                        running: thumbMa.containsMouse
+                        onTriggered: parent._tipUp = true
+                    }
+                    Rectangle {
+                        visible: parent._tipUp && thumbMa.containsMouse
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        z: 99
+                        implicitWidth: Math.min(wpTipText.implicitWidth + 16, parent.width)
+                        implicitHeight: 24
+                        radius: 6
+                        color: Theme.bg0h
+                        border.width: 1
+                        border.color: Theme.bg2
+                        Text {
+                            id: wpTipText
+                            anchors.centerIn: parent
+                            width: Math.min(implicitWidth, parent.width - 12)
+                            elide: Text.ElideMiddle
                             text: modelData.split("/").pop()
                             color: Theme.fg
-                            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
+                            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 4 }
                         }
                     }
                 }

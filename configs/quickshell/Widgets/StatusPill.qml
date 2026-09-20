@@ -4,6 +4,8 @@ import QtQuick.Controls
 import "../Services"
 
 Rectangle {
+    id: statusPillRoot
+    readonly property var winRef: Window.window
     property string icon
     property string value
     property color iconColor: Theme.fg0
@@ -39,25 +41,18 @@ Rectangle {
         id: pillMa
         anchors.fill: parent
         hoverEnabled: true
+        onContainsMouseChanged: if (!containsMouse) TipSvc.hide()
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onPressed: TipSvc.hide()
         onClicked: ev => ev.button === Qt.RightButton ? parent.rightClicked() : parent.clicked()
         onWheel: ev => parent.wheelMoved(ev.angleDelta.y)
     }
-    ToolTip {
-        visible: tooltip !== "" && pillMa.containsMouse
-        text: tooltip
-        delay: 700
-        padding: 8
-        background: Rectangle {
-            color: Theme.bg0h
-            radius: 6
-            border.width: 1
-            border.color: Theme.bg2
-        }
-        contentItem: Text {
-            text: tooltip
-            color: Theme.fg
-            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 3 }
-        }
+    Timer {
+        interval: 700
+        running: pillMa.containsMouse && tooltip !== ""
+        onTriggered: TipSvc.show(statusPillRoot.tooltip,
+            statusPillRoot.mapToItem(null, 0, 0).x + statusPillRoot.width / 2,
+            statusPillRoot.winRef && statusPillRoot.winRef.screen
+                ? statusPillRoot.winRef.screen.name : "")
     }
 }

@@ -12,4 +12,5 @@ singleton NotifSvc NotifSvc.qml
 singleton OsdSvc OsdSvc.qml
 singleton SysMon SysMon.qml
 singleton Theme Theme.qml
+singleton TipSvc TipSvc.qml
 singleton Wallpaper Wallpaper.qml

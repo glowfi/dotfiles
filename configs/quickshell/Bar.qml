@@ -133,6 +133,7 @@ Scope {
 
         BarButton {   // clipboard -> modules/clipboard
                 id: clipBtn
+                tooltip: "clipboard history"
                 text: "󰅍"
                 px: Theme.iconSize
                 fgColor: Theme.fg0
@@ -160,6 +161,7 @@ Scope {
             Tray { bar: bar; menuPopup: trayMenuPopup }
             BarButton {   // clock -> modules/calendar
                 id: clockBtn
+                tooltip: "calendar"
                 text: Qt.formatDateTime(Clock.date, "ddd dd MMM  h:mm AP")
                 fgColor: Theme.fg
                 onClicked: bar.togglePopupAt(calPopup, clockBtn)

@@ -15,6 +15,14 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+
+    // subsequence fuzzy match (same as clipboard search)
+    function fuzzy(hay, q) {
+        hay = hay.toLowerCase(); q = q.toLowerCase();
+        let i = 0;
+        for (const c of q) { i = hay.indexOf(c, i); if (i < 0) return false; i++; }
+        return true;
+    }
     implicitWidth: 390
     implicitHeight: 440
     visible: false
@@ -62,6 +70,35 @@ PanelWindow {
             font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 30
+            radius: 5
+            color: Theme.bg1
+            border.width: 1
+            border.color: wifiSearch.activeFocus ? Theme.yellow : Theme.bg2
+            visible: Net.wifiEnabled
+            TextInput {
+                id: wifiSearch
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                verticalAlignment: TextInput.AlignVCenter
+                color: Theme.fg
+                clip: true
+                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+                Keys.onEscapePressed: { if (text !== "") text = ""; else wifiPopup.visible = false }
+            }
+            Text {
+                anchors.fill: wifiSearch
+                verticalAlignment: Text.AlignVCenter
+                visible: wifiSearch.text === "" && !wifiSearch.activeFocus
+                text: "search networks…"
+                color: Theme.gray
+                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 1 }
+            }
+        }
+
         Flickable {
             id: wifiFlick
             Layout.fillWidth: true
@@ -76,7 +113,10 @@ PanelWindow {
                 width: wifiFlick.width - 14   // scrollbar gutter, measured off the Flickable
                 spacing: 4
                 Repeater {
-                    model: Net.wifiEnabled ? Net.wifiNets : []
+                    model: Net.wifiEnabled
+                           ? Net.wifiNets.filter(n => wifiSearch.text === ""
+                                                 || wifiPopup.fuzzy(n.ssid, wifiSearch.text))
+                           : []
                     ColumnLayout {
                         id: netEntry
                         required property var modelData
