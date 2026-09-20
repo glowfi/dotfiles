@@ -2,30 +2,39 @@ import QtQuick
 import QtQuick.Layouts
 import "../Services"
 
-RowLayout {
+// Root is a plain Item: a MouseArea child of a RowLayout would be
+// layout-managed (anchors on it = undefined behavior + a phantom slot).
+Item {
     id: chipStat
     property string icon
     property string value
     property string tooltip: ""
     readonly property var winRef: Window.window
-    spacing: 5
 
-    Text {
-        text: chipStat.icon
-        color: Theme.fg0
-        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.iconSize - 2 }
-    }
-    Text {
-        text: chipStat.value
-        color: Theme.fg
-        font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+    implicitWidth: chipRow.implicitWidth
+    implicitHeight: chipRow.implicitHeight
+
+    RowLayout {
+        id: chipRow
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 5
+        Text {
+            text: chipStat.icon
+            color: Theme.fg0
+            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.iconSize - 2 }
+        }
+        Text {
+            text: chipStat.value
+            color: Theme.fg
+            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
+        }
     }
 
     MouseArea {
         id: chipMa
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.NoButton   // hover only: stays display-only
+        acceptedButtons: Qt.NoButton
         onContainsMouseChanged: if (!containsMouse) TipSvc.hide()
     }
     Timer {

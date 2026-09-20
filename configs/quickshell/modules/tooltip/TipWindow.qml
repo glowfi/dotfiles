@@ -15,14 +15,17 @@ PanelWindow {
     color: "transparent"
     mask: Region {}
 
-    visible: TipSvc.shown && screen
-             && (TipSvc.screenName === "" || TipSvc.screenName === screen.name)
+    // compare against the STATIC screen handed in by Variants: reading the
+    // window's own `screen` inside `visible` loops (visibility changes touch
+    // the window's screen association, invalidating the binding mid-eval)
+    visible: TipSvc.shown && modelData
+             && (TipSvc.screenName === "" || TipSvc.screenName === modelData.name)
     implicitWidth: tipText.implicitWidth + 18
     implicitHeight: 26
     margins {
         top: Theme.barHeight + 2
         left: Math.max(8, Math.min(TipSvc.cx - implicitWidth / 2,
-                                   (screen ? screen.width : 0) - implicitWidth - 8))
+                                   (modelData ? modelData.width : 0) - implicitWidth - 8))
     }
 
     Rectangle {

@@ -64,15 +64,22 @@ Singleton {
     }
     Process {
         id: ssidCheck
-        command: ["sh", "-c", "nmcli -e no -t -f active,ssid,signal dev wifi 2>/dev/null | sed -n 's/^yes://p' | head -1"]
+        // NAME from the active WIRELESS connection profile: type-filtered, so
+        // VPN/tunnel entries structurally cannot leak into the displayed name
+        // (scan-line parsing let a numeric artifact through under VPN).
+        // SIGNAL still comes from the scan line — numbers can't lie there.
+        command: ["sh", "-c",
+            "nmcli -t -e no -f NAME,TYPE connection show --active 2>/dev/null" +
+            " | grep \":802-11-wireless$\" | head -1 | cut -d: -f1; " +
+            "echo ---; " +
+            "nmcli -e no -t -f active,signal dev wifi 2>/dev/null" +
+            " | sed -n 's/^yes://p' | head -1"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                const line = text.trim();
-                const i = line.lastIndexOf(":");
-                if (i < 0) { netSsid = line; netSignal = 0; return; }
-                netSsid = line.substring(0, i);
-                netSignal = parseInt(line.substring(i + 1)) || 0;
+                const parts = text.split("---");
+                netSsid = (parts[0] ?? "").trim();
+                netSignal = parseInt((parts[1] ?? "").trim()) || 0;
             }
         }
     }
