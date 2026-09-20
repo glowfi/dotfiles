@@ -1,18 +1,21 @@
 #!/bin/sh
+
 [ "$1" = watch ] && exec watch -n1 "$0"
 
-printf '%4s %4s  %-9s %-24s %s\n' SOCK EST PROTO PROCESS REMOTE
-lsof -i -n -P 2>/dev/null | awk '
-NR > 1 {
-    k = $1 " " $2
-    n[k]++
-    if ($10 == "(ESTABLISHED)") est[k]++
-    if (!((k, $8) in ps)) { ps[k, $8]; proto[k] = proto[k] $8 "," }
-    if (split($9, a, "->") == 2) {
-        sub(/:[0-9]+$/, "", a[2])
-        if (!((k, a[2]) in rs)) { rs[k, a[2]]; r[k] = r[k] a[2] " " }
-    }
+printf '%9s %9s  %4s  %s\n' UP DOWN SOCK PROCESS
+ss -tinpHO 2>/dev/null | awk '
+function human(b,  u, i) {
+    split("B K M G T", u, " "); i = 1
+    while (b >= 1024 && i < 5) { b /= 1024; i++ }
+    return sprintf(i == 1 ? "%d%s" : "%.1f%s", b, u[i])
+}
+match($0, /users:\(\("[^"]+",pid=[0-9]+/) {
+    p = substr($0, RSTART + 9, RLENGTH - 9)     # name",pid=N
+    sub(/",pid=/, " ", p)
+    n[p]++
+    if (match($0, /bytes_sent:[0-9]+/))     tx[p] += substr($0, RSTART + 11, RLENGTH - 11)
+    if (match($0, /bytes_received:[0-9]+/)) rx[p] += substr($0, RSTART + 15, RLENGTH - 15)
 }
 END {
-    for (k in n) printf "%4d %4d  %-9s %-24s %s\n", n[k], est[k] + 0, proto[k], k, r[k]
-}' | sort -k1,1rn
+    for (p in n) printf "%12d %9s %9s  %4d  %s\n", tx[p] + rx[p], human(tx[p]), human(rx[p]), n[p], p
+}' | sort -k1,1rn | cut -c14-
