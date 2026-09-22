@@ -85,8 +85,35 @@ Singleton {
         }
     }
 
+    // battery per connected device, read from bluetoothctl (independent of
+    // quickshell's device-property surface, which varies by build):
+    // { "AA:BB:...": 82, ... }
+    property var batteries: ({})
+    Process {
+        id: battProc
+        command: ["sh", "-c",
+            "for a in $(bluetoothctl devices Connected 2>/dev/null | awk '{print $2}'); do " +
+            "p=$(bluetoothctl info \"$a\" 2>/dev/null " +
+            "| sed -n 's/.*Battery Percentage:.*(\\([0-9]*\\)).*/\\1/p'); " +
+            "[ -n \"$p\" ] && echo \"$a|$p\"; done"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = {};
+                for (const line of text.trim().split("\n")) {
+                    const p = line.split("|");
+                    if (p.length === 2) m[p[0]] = parseInt(p[1]);
+                }
+                btCtl.batteries = m;
+            }
+        }
+    }
+    function battOf(addr) {
+        return batteries[addr] !== undefined ? batteries[addr] : -1;
+    }
+
     // sticky session union of everything BlueZ ever listed as paired/bonded
-    function refreshKnown() { knownProc.running = true }
+    function refreshKnown() { knownProc.running = true; battProc.running = true }
     Timer { id: knownKick; interval: 2500; onTriggered: btCtl.refreshKnown() }
     Process {
         id: knownProc

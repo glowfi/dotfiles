@@ -177,9 +177,12 @@ PanelWindow {
                                 }
                             }
                             Text {
-                                visible: (modelData.batteryAvailable ?? false)
-                                text: Math.round((modelData.battery ?? 0) * 100) + "%"
-                                color: Theme.fgDim
+                                readonly property int pct: (modelData.batteryAvailable ?? false)
+                                    ? Math.round((modelData.battery ?? 0) * 100)
+                                    : BtCtl.battOf(modelData.address)
+                                visible: pct >= 0
+                                text: Theme.batIcon(pct, false) + " " + pct + "%"
+                                color: pct >= 0 && pct < 20 ? Theme.red : Theme.fgDim
                                 font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
                             }
                         }
