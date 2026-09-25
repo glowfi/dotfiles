@@ -56,11 +56,28 @@ Singleton {
     }
     onWifiErrorChanged: if (wifiError !== "") errClear.restart()
 
+    property string netType: ""
+    property string netEthName: ""   // active wired connection profile, "" if none   // "wifi" | "ethernet" | "tun" | ... | ""
     Process {
         id: netCheck
         command: ["sh", "-c", "ip -o route get 1.1.1.1 2>/dev/null | awk '{print $5; exit}'"]
         running: true
-        stdout: StdioCollector { onStreamFinished: netIface = text.trim() }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                netIface = text.trim();
+                if (netIface !== "") typeCheck.running = true;
+                else netType = "";
+            }
+        }
+    }
+    Process {
+        id: typeCheck
+        command: ["sh", "-c",
+            "nmcli -t -e no -f DEVICE,TYPE device status 2>/dev/null" +
+            " | grep \"^$(ip -o route get 1.1.1.1 2>/dev/null | awk '{print $5; exit}'):\"" +
+            " | cut -d: -f2"]
+        running: true
+        stdout: StdioCollector { onStreamFinished: netType = text.trim() }
     }
     Process {
         id: ssidCheck
@@ -72,6 +89,9 @@ Singleton {
             "nmcli -t -e no -f NAME,TYPE connection show --active 2>/dev/null" +
             " | grep \":802-11-wireless$\" | head -1 | cut -d: -f1; " +
             "echo ---; " +
+            "nmcli -t -e no -f NAME,TYPE connection show --active 2>/dev/null" +
+            " | grep \":802-3-ethernet$\" | head -1 | cut -d: -f1; " +
+            "echo ---; " +
             "nmcli -e no -t -f active,signal dev wifi 2>/dev/null" +
             " | sed -n 's/^yes://p' | head -1"]
         running: true
@@ -79,7 +99,8 @@ Singleton {
             onStreamFinished: {
                 const parts = text.split("---");
                 netSsid = (parts[0] ?? "").trim();
-                netSignal = parseInt((parts[1] ?? "").trim()) || 0;
+                netEthName = (parts[1] ?? "").trim();
+                netSignal = parseInt((parts[2] ?? "").trim()) || 0;
             }
         }
     }
