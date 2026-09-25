@@ -9,5 +9,5 @@ startup:
     - wl-paste --watch cliphist store
     - ~/.local/bin/wall.sh
     - swayosd-server
-    - swayidle -w timeout 300 'veila lock' timeout 600 '[ "$(cat /proc/1/comm)" = systemd ] && ctl=systemctl || ctl=loginctl; $ctl suspend'
+    - swayidle -w timeout 300 'veila lock' timeout 600 '[ "$(cat /proc/1/comm)" = systemd ] && ctl=systemctl || ctl=loginctl; $ctl suspend' before-sleep 'veila lock'
     - poweralertd -S
