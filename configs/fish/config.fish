@@ -302,12 +302,15 @@ end
 # Never sleep
 alias caffeine '"'(command -v systemd-inhibit; or command -v elogind-inhibit)'" --what=sleep:idle:handle-lid-switch sleep infinity'
 
-# Temporary sleep
+# Blankout screen
 function blank -d "screen off, stay awake + networked, wake on input"
     systemd-inhibit --what=sleep:idle --why=blank \
         swayidle -w timeout 1 'wlopm --off "*"' \
         resume 'wlopm --on "*"; pkill -f "[s]wayidle -w timeout 1"'
 end
+
+# Reload firewall
+alias fwreload 'sudo nft -c -f /etc/nftables.conf && and sudo nft -f /etc/nftables.conf && echo "firewall reloaded"'
 
 # ===================================================================
 #                           Custom Functions
@@ -747,7 +750,7 @@ end
 function chooseTheme
     set chosen (printf "simple\nclassic\nminimal" | fzf)
     if test -n "$chosen"; and test "$runningOS" = Linux
-        sed -i "934s/.*/$chosen/" ~/.config/fish/config.fish
+        sed -i "937s/.*/$chosen/" ~/.config/fish/config.fish
         source ~/.config/fish/config.fish
     end
 end
