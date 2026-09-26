@@ -310,7 +310,7 @@ function blank -d "screen off, stay awake + networked, wake on input"
 end
 
 # Reload firewall
-alias fwreload 'sudo nft -c -f /etc/nftables.conf && and sudo nft -f /etc/nftables.conf && echo "firewall reloaded"'
+alias fwreload 'sudo nft -c -f /etc/nftables.conf && and sudo nft -f /etc/nftables.conf && systemctl status nftables && echo "firewall reloaded"'
 
 # ===================================================================
 #                           Custom Functions
