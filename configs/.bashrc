@@ -134,12 +134,16 @@ function searchContents() {
 #                           Prompt
 # ===================================================================
 
-user=$(whoami)
-if [[ "$user" = "root" ]]; then
-	PS1='◆  \[\e[91m\]\u\[\e[0;1m\] \w $(git branch 2>/dev/null | grep '"'"'*'"'"' | colrm 1 2) '
-else
-	PS1='◆  \[\e[32m\]\u\[\e[0;1m\] \w $(git branch 2>/dev/null | grep '"'"'*'"'"' | colrm 1 2) '
-fi
+__git_branch() {
+	local b
+	b=$(git symbolic-ref --short -q HEAD 2>/dev/null) ||
+		b=$(git rev-parse --short HEAD 2>/dev/null) || return
+	printf ' %s' "$b"
+}
+
+((EUID == 0)) && c='\e[91m' || c='\e[38;2;131;165;152m'
+PS1="\[\e[38;2;199;243;119m\]◆\[\e[0m\]  \[$c\]\u\[\e[0;1m\] \w\[\e[0;38;2;250;189;47m\]\$(__git_branch)\[\e[0m\] "
+unset c
 
 # ===================================================================
 #                           Path
