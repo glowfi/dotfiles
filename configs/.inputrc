@@ -1,4 +1,4 @@
-#_                   _            
+#  _                   _            
 # (_)_ __  _ __  _   _| |_ _ __ ___ 
 # | | '_ \| '_ \| | | | __| '__/ __|
 # | | | | | |_) | |_| | |_| | | (__ 
@@ -7,12 +7,22 @@
 
 
 $include /etc/inputrc
+
+# completion
 set completion-ignore-case on
-set completion-query-items -1
+set completion-query-items 200
 set show-all-if-unmodified on
-set show-all-if-ambiguous off
+set menu-complete-display-prefix on
 set colored-completion-prefix on
 set colored-stats on
-set visible-stats on
-"\C-j": menu-complete
-"\C-k": menu-complete-backward
+set mark-symlinked-directories on
+set skip-completed-text on
+
+# misc
+set bell-style none
+
+# keys
+TAB: menu-complete
+"\e[Z": menu-complete-backward
+"\e[A": history-search-backward
+"\e[B": history-search-forward

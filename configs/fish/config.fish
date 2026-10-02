@@ -321,18 +321,13 @@ function bang_bang
 end
 abbr -a !! --position anywhere --function bang_bang
 
-### Ignore golang directory
-set go_loc_var (echo "go")
-
-# Utility variable
-
 # Search Files in current working directory
 function searchFilesCurrent
 
     if test -z "$argv[1]"
-        fd --exclude "$go_loc_var" --type f . | fzf --prompt "Open File:" --reverse --preview "bat --theme $BAT_THEME --style numbers,changes --color=always {}" | read -t args
+        fd --type f . | fzf --prompt "Open File:" --reverse --preview "bat --theme $BAT_THEME --style numbers,changes --color=always {}" | read -t args
     else
-        fd --exclude "$go_loc_var" --type f --hidden . | fzf --prompt "Open File:" --reverse --preview "bat --theme $BAT_THEME --style numbers,changes --color=always {}" | read -t args
+        fd --type f --hidden . | fzf --prompt "Open File:" --reverse --preview "bat --theme $BAT_THEME --style numbers,changes --color=always {}" | read -t args
     end
 
     if test -z "$args"
@@ -367,9 +362,9 @@ end
 function searchDirCurrent
 
     if test -z "$argv[1]"
-        fd --exclude "$go_loc_var" --type d . | fzf --prompt "Go to:" --reverse --preview "ls {}" | read -t args
+        fd --type d . | fzf --prompt "Go to:" --reverse --preview "ls {}" | read -t args
     else
-        fd --exclude "$go_loc_var" --type d --hidden . | fzf --prompt "Open File:" --reverse --preview "ls {}" | read -t args
+        fd --type d --hidden . | fzf --prompt "Open File:" --reverse --preview "ls {}" | read -t args
     end
 
     if test -z "$args"
@@ -383,12 +378,12 @@ end
 function searchContents
 
     if test -z "$argv[1]"
-        rg --line-number -g "!$go_loc_var" -g "!./.*" -g "!node_modules" . | awk '{ print $0 }' | fzf --prompt "Find By Words:" --color 'hl:-1:underline,hl+:-1:underline:reverse' --preview 'set loc {}
+        rg --line-number -g "!./.*" -g "!node_modules" . | awk '{ print $0 }' | fzf --prompt "Find By Words:" --color 'hl:-1:underline,hl+:-1:underline:reverse' --preview 'set loc {}
 set loc1 (string split ":" {} -f2)
 set loc (string split ":" {} -f1)
 bat --theme gruvbox-dark --style numbers,changes --color=always --highlight-line $loc1 --line-range $loc1: $loc' | awk -F':' '{ print $1 "``@``" $2}' | read -t args
     else
-        rg --line-number -g "!$go_loc_var" -g "!./.*" -g "!node_modules" . --hidden | awk '{ print $0 }' | fzf --prompt "Find By Words:" --color 'hl:-1:underline,hl+:-1:underline:reverse' --preview 'set loc {}
+        rg --line-number -g "!./.*" -g "!node_modules" . --hidden | awk '{ print $0 }' | fzf --prompt "Find By Words:" --color 'hl:-1:underline,hl+:-1:underline:reverse' --preview 'set loc {}
 set loc1 (string split ":" {} -f2)
 set loc (string split ":" {} -f1)
 bat --theme gruvbox-dark --style numbers,changes --color=always --highlight-line $loc1 --line-range $loc1: $loc' | awk -F':' '{ print $1 "``@``" $2}' | read -t args
@@ -750,7 +745,7 @@ end
 function chooseTheme
     set chosen (printf "simple\nclassic\nminimal" | fzf)
     if test -n "$chosen"; and test "$runningOS" = Linux
-        sed -i "937s/.*/$chosen/" ~/.config/fish/config.fish
+        sed -i "932s/.*/$chosen/" ~/.config/fish/config.fish
         source ~/.config/fish/config.fish
     end
 end
