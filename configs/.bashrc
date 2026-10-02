@@ -16,7 +16,6 @@ alias sgh='searchContents h'
 alias v='nvim'
 alias n='nnn -d -e'
 alias gt='gitui'
-alias ls='ls -1'
 alias grep='grep --color=auto'
 
 # ===================================================================
