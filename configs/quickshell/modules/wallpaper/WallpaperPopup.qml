@@ -1,27 +1,27 @@
-// In-shell wallpaper picker (quattro-style): thumbnail grid, click to apply
-// with an animated transition via awww.
+// Wallpaper popup: 3-column thumbnail grid (the slat strip lives in
+// WallPicker.qml, the fullscreen overlay on meta+w).
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import "../../Services"
 import "../../Widgets"
 
 PanelWindow {
-    id: wallPopup
+    id: wallpaperPopup
     required property var bar
     screen: bar.screen
     anchors { top: true; left: true }
     margins { top: Theme.barHeight + 4; left: 8 }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
-    implicitWidth: 480
-    implicitHeight: 430
+    implicitWidth: 460
+    implicitHeight: wallCol.implicitHeight + 28
     visible: false
     color: "transparent"
+    onVisibleChanged: if (visible) Wallpaper.rescan()
 
-    // popup surface: rounded + hairline border (windows are transparent)
     Rectangle {
         anchors.fill: parent
         radius: 10
@@ -31,72 +31,62 @@ PanelWindow {
     }
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: 8
+        id: wallCol
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+        spacing: 10
 
         RowLayout {
             Layout.fillWidth: true
-            Text {
-                Layout.fillWidth: true
-                text: "Wallpapers"
-                color: Theme.yellow
-                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize }
-            }
-            ActionChip {
-                label: "󰑐 rescan"
-                onClicked: Wallpaper.rescan()
-            }
+            SectionLabel { Layout.fillWidth: true; text: "WALLPAPER" }
+            ActionChip { label: "󰑐 rescan"; onClicked: Wallpaper.rescan() }
         }
 
-        GridView {
-            id: wallGrid
+        Flickable {
+            id: wallFlick
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            implicitHeight: Math.min(420, wallGrid.implicitHeight)
+            contentWidth: width
+            contentHeight: wallGrid.implicitHeight
+            flickableDirection: Flickable.VerticalFlick
+            boundsBehavior: Flickable.StopAtBounds
             clip: true
-            cellWidth: Math.floor((width - 14) / 3)
-            cellHeight: Math.floor(cellWidth * 0.62) + 8
-            model: Wallpaper.walls
             ScrollBar.vertical: GruvScrollBar {}
 
-            delegate: Item {
-                required property var modelData
-                width: wallGrid.cellWidth
-                height: wallGrid.cellHeight
+            GridLayout {
+                id: wallGrid
+                width: wallFlick.width - 14   // scrollbar gutter
+                columns: 3
+                rowSpacing: 8
+                columnSpacing: 8
+                Repeater {
+                model: Wallpaper.walls
                 Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 4
+                    id: thumb
+                    required property string modelData
+                    property bool _tipUp: false
+                    Layout.fillWidth: true
+                    implicitHeight: 110
                     radius: 6
-                    color: Theme.bg1
                     clip: true
+                    color: Theme.bg1
                     border.width: thumbMa.containsMouse ? 2 : 0
                     border.color: Theme.yellow
+
                     Image {
                         anchors.fill: parent
-                        anchors.margins: thumbMa.containsMouse ? 2 : 0
-                        source: "file://" + modelData
-                        sourceSize.width: 300          // decode small: fast + sharp thumbs
-                        fillMode: Image.PreserveAspectCrop
+                        anchors.margins: thumb.border.width
                         asynchronous: true
+                        sourceSize.width: 380
+                        fillMode: Image.PreserveAspectCrop
+                        source: "file://" + thumb.modelData
                     }
-                    MouseArea {
-                        id: thumbMa
-                        onContainsMouseChanged: if (!containsMouse) parent.parent._tipUp = false
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            Wallpaper.set(modelData);
-                            wallPopup.visible = false;
-                        }
-                    }
-                    property bool _tipUp: false
                     Timer {
                         interval: 700
                         running: thumbMa.containsMouse
-                        onTriggered: parent._tipUp = true
+                        onTriggered: thumb._tipUp = true
                     }
                     Rectangle {
-                        visible: parent._tipUp && thumbMa.containsMouse
+                        visible: thumb._tipUp && thumbMa.containsMouse
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 4
@@ -112,25 +102,28 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: Math.min(implicitWidth, parent.width - 12)
                             elide: Text.ElideMiddle
-                            text: modelData.split("/").pop()
+                            text: thumb.modelData.split("/").pop()
                             color: Theme.fg
                             font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 4 }
                         }
                     }
+                    MouseArea {
+                        id: thumbMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onContainsMouseChanged: if (!containsMouse) thumb._tipUp = false
+                        onClicked: Wallpaper.set(thumb.modelData)
+                    }
+                    }
                 }
             }
+        }
 
-            Text {
-                anchors.centerIn: parent
-                visible: Wallpaper.walls.length === 0
-                width: parent.width - 40
-                wrapMode: Text.Wrap
-                horizontalAlignment: Text.AlignHCenter
-                text: "no images in " + Wallpaper.wallDir
-                      + "\n(dir configurable in Services/Wallpaper.qml)"
-                color: Theme.gray
-                font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
-            }
+        Text {
+            visible: Wallpaper.walls.length === 0
+            text: "no wallpapers found in " + Wallpaper.wallDir
+            color: Theme.gray
+            font { family: Theme.fontFamily; bold: true; pixelSize: Theme.fontSize - 2 }
         }
     }
 }

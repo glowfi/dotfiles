@@ -11,6 +11,7 @@ import Quickshell
 import "modules/notifications"
 import "modules/osd"
 import "modules/tooltip"
+import "modules/wallpaper"
 
 ShellRoot {
     Variants {
@@ -22,6 +23,7 @@ ShellRoot {
         TipWindow {}
     }
 
+    WallPicker {}
     Toasts {}
     OsdWindow {}
 }

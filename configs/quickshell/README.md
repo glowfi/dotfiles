@@ -53,6 +53,7 @@ media keys (optional):
 	bind=NONE,XF86AudioMute,spawn,qs ipc call osd mute
 	bind=NONE,XF86MonBrightnessUp,spawn,qs ipc call osd brightnessUp
 	bind=NONE,XF86MonBrightnessDown,spawn,qs ipc call osd brightnessDown
+	bind=SUPER,w,spawn,qs ipc call wallpicker toggle
 
 ## layout
 

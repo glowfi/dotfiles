@@ -22,6 +22,10 @@ keybindings:
       keys: alt+b
       run: qs ipc call bar toggle
 
+    - name: Choose wallpaper picker
+      keys: super+w
+      run: qs ipc call wallpicker toggle
+
     - name: Screenshot
       keys: alt+a
       interpreter: bash
