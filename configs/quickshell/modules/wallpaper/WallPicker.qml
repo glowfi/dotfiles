@@ -18,10 +18,12 @@ PanelWindow {
     visible: false
     color: "#cc000000"
 
-    property int sel: 0
-    readonly property string current:
-        Wallpaper.walls.length > 0 && sel >= 0 && sel < Wallpaper.walls.length
-        ? Wallpaper.walls[sel] : ""
+    // selection is the PATH itself — the clicked thumb's own string flows
+    // straight to apply(), so clicked-vs-applied mismatch is impossible by
+    // construction (no index hops that array updates could desync)
+    property string selPath: ""
+    readonly property int sel: Wallpaper.walls.indexOf(selPath)
+    readonly property string current: selPath
 
     IpcHandler {
         target: "wallpicker"
@@ -30,17 +32,31 @@ PanelWindow {
         function hide(): void { wallPicker.visible = false }
     }
 
-    onVisibleChanged: if (visible) { Wallpaper.rescan(); sel = 0; pickerFocus.forceActiveFocus() }
+    onVisibleChanged: if (visible) {
+        Wallpaper.rescan();
+        selPath = Wallpaper.walls.length > 0 ? Wallpaper.walls[0] : "";
+        pickerFocus.forceActiveFocus();
+    }
     onCurrentChanged: if (current !== "") crossfade.swap(current)
 
     function move(step) {
         const n = Wallpaper.walls.length;
-        if (n > 0) sel = ((sel + step) % n + n) % n;
+        if (n === 0) return;
+        const i = Math.max(0, Wallpaper.walls.indexOf(selPath));
+        selPath = Wallpaper.walls[((i + step) % n + n) % n];
     }
     function apply() {
         if (current === "") return;
         Wallpaper.set(current);
         visible = false;
+    }
+
+    Connections {
+        target: Wallpaper
+        function onWallsChanged() {
+            if (wallPicker.visible && Wallpaper.walls.indexOf(wallPicker.selPath) === -1)
+                wallPicker.selPath = Wallpaper.walls.length > 0 ? Wallpaper.walls[0] : "";
+        }
     }
 
     MouseArea { anchors.fill: parent; onClicked: wallPicker.visible = false }
@@ -80,8 +96,11 @@ PanelWindow {
                 anchors.margins: 1
                 property bool aFront: true
                 function swap(src) {
-                    const front = aFront ? imgB : imgA;   // incoming
-                    front.source = "file://" + src;
+                    // load into the buffer that becomes VISIBLE after the
+                    // flip. The inverted pick here made the preview show the
+                    // PREVIOUS selection — one step behind the thumbnails.
+                    const incoming = aFront ? imgA : imgB;
+                    incoming.source = Wallpaper.toUrl(src);
                     aFront = !aFront;
                 }
                 Image {
@@ -165,14 +184,18 @@ PanelWindow {
                             asynchronous: true
                             sourceSize.width: 200
                             fillMode: Image.PreserveAspectCrop
-                            source: "file://" + parent.modelData
+                            source: Wallpaper.toUrl(parent.modelData)
                             opacity: wallPicker.sel === parent.index ? 1 : 0.55
                             Behavior on opacity { NumberAnimation { duration: 120 } }
                         }
                         MouseArea {
                             anchors.fill: parent
-                            onClicked: wallPicker.sel = parent.index
-                            onDoubleClicked: { wallPicker.sel = parent.index; wallPicker.apply() }
+                            onClicked: wallPicker.selPath = parent.modelData
+                            onDoubleClicked: {
+                                wallPicker.selPath = parent.modelData;
+                                Wallpaper.set(parent.modelData);   // apply EXACTLY this thumb
+                                wallPicker.visible = false;
+                            }
                         }
                     }
                 }

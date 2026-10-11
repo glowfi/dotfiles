@@ -21,6 +21,17 @@ Singleton {
 
     function rescan() { scanProc.running = true }
 
+    // file path -> file:// URL with URL-special characters encoded.
+    // Raw concatenation truncates at "#"/"?" and misdecodes "%", making an
+    // Image render a DIFFERENT existing file than the path it represents —
+    // while apply (argv, no URL) uses the true path. Order matters: % first.
+    function toUrl(path) {
+        return "file://" + path
+            .replace(/%/g, "%25")
+            .replace(/#/g, "%23")
+            .replace(/\?/g, "%3F");
+    }
+
     function set(path) {
         Quickshell.execDetached([bin, "img", path,
             "--transition-type", transition,

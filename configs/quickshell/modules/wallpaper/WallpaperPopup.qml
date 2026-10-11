@@ -78,7 +78,7 @@ PanelWindow {
                         asynchronous: true
                         sourceSize.width: 380
                         fillMode: Image.PreserveAspectCrop
-                        source: "file://" + thumb.modelData
+                        source: Wallpaper.toUrl(thumb.modelData)
                     }
                     Timer {
                         interval: 700
