@@ -291,9 +291,11 @@ download_debian() {
 }
 
 download_ubuntu() {
-	local mirror="http://cdimage.ubuntu.com/daily-live/current/"
-	local x=$(curl -s "$mirror" | grep -m1 desktop-amd64.iso | awk -F\" '{ print $2 }' | awk -F\" '{ print $1 }')
-	local download_link="$mirror/$x"
+	local mirror="https://cdimage.ubuntu.com/ubuntu/releases/"
+	local ver=$(curl "$mirror" | extract_links_from_html | sort | sed -e 's/[[:alpha:]]//g' -e '/^[/?=;]*$/d' | tail -1 | tr -d "/")
+	local download_page_link="$mirror/$ver/release/"
+	local variant=$(curl "$download_page_link" | extract_links_from_html | grep -E ".*.iso$" | fzf --cycle --prompt "Choose iso to download:")
+	local download_link="$download_page_link$variant"
 	local output_file="ubuntu.iso"
 	download "$download_link" "$output_file"
 }
