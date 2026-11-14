@@ -1126,7 +1126,7 @@ download_windows() {
 	local temporary_download_directory=$(echo "${DOWNLOAD_DIR}/tmp_download-${windows_version}-${current_timestamp}")
 	mkdir -p "${temporary_download_directory}"
 	cd "${temporary_download_directory}"
-	download_buzzheavier "${iso_download_url}" "${iso_file_name}"
+	download_zerofs "${iso_download_url}" "${iso_file_name}"
 
 	# mount downloaded iso
 	mkdir iso_mount
@@ -1316,6 +1316,47 @@ download() {
 
 	echo "❌ All download methods failed for: $url"
 	return 1
+}
+
+download_zerofs() {
+	local page=$1 out=$2 profile pid url ver
+	[[ -z $page || -z $out ]] && {
+		echo "usage: zdl <page-url> <output-file>" >&2
+		return 2
+	}
+
+	# throwaway profile that saves downloads inside itself without asking
+	profile=$(mktemp -d) || return
+	mkdir "$profile/Default"
+	echo "{\"download\":{\"default_directory\":\"$profile\",\"prompt_for_download\":false}}" \
+		>"$profile/Default/Preferences"
+
+	chromium --user-data-dir="$profile" --no-first-run "$page" &>/dev/null &
+	pid=$!
+	echo "click Download and solve the captcha..." >&2
+
+	# wait until the download shows up in Chromium's history (takes ~10s)
+	while [[ -z $url ]] && kill -0 "$pid" 2>/dev/null; do
+		sleep 2
+		cp "$profile/Default/History" "$profile/history" 2>/dev/null &&
+			url=$(sqlite3 "$profile/history" \
+				'select url from downloads_url_chains order by id desc, chain_index desc limit 1' 2>/dev/null)
+	done
+
+	# close Chromium and drop the profile, including its partial download
+	kill "$pid" 2>/dev/null
+	wait "$pid" 2>/dev/null
+	rm -rf "$profile"
+	[[ -z $url ]] && {
+		echo "zdl: no download link captured" >&2
+		return 1
+	}
+
+	ver=$(chromium --version | grep -oE '[0-9]+' | head -n1)
+	aria2c -c -x 8 -s 8 -k 1M --file-allocation=none \
+		--user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$ver.0.0.0 Safari/537.36" \
+		--referer="$page" \
+		-d "$(dirname "$out")" -o "$(basename "$out")" "$url"
 }
 
 download_buzzheavier() {
