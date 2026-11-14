@@ -1319,38 +1319,34 @@ download() {
 }
 
 download_zerofs() {
-	local page=$1 out=$2 profile pid url ver
+	local page=$1 out=$2 tmp last url ver
+	local db=${XDG_CONFIG_HOME:-$HOME/.config}/chromium/Default/History
 	[[ -z $page || -z $out ]] && {
 		echo "usage: zdl <page-url> <output-file>" >&2
 		return 2
 	}
 
-	# throwaway profile that saves downloads inside itself without asking
-	profile=$(mktemp -d) || return
-	mkdir "$profile/Default"
-	echo "{\"download\":{\"default_directory\":\"$profile\",\"prompt_for_download\":false}}" \
-		>"$profile/Default/Preferences"
-
-	chromium --user-data-dir="$profile" --no-first-run "$page" &>/dev/null &
-	pid=$!
-	echo "click Download and solve the captcha..." >&2
-
-	# wait until the download shows up in Chromium's history (takes ~10s)
-	while [[ -z $url ]] && kill -0 "$pid" 2>/dev/null; do
-		sleep 2
-		cp "$profile/Default/History" "$profile/history" 2>/dev/null &&
-			url=$(sqlite3 "$profile/history" \
-				'select url from downloads_url_chains order by id desc, chain_index desc limit 1' 2>/dev/null)
-	done
-
-	# close Chromium and drop the profile, including its partial download
-	kill "$pid" 2>/dev/null
-	wait "$pid" 2>/dev/null
-	rm -rf "$profile"
-	[[ -z $url ]] && {
-		echo "zdl: no download link captured" >&2
+	# remember the newest download already in history, so only a later one counts
+	tmp=$(mktemp) || return
+	cp "$db" "$tmp" && last=$(sqlite3 "$tmp" 'select coalesce(max(id), 0) from downloads_url_chains')
+	[[ -z $last ]] && {
+		echo "zdl: cannot read $db" >&2
+		rm -f "$tmp"
 		return 1
 	}
+
+	chromium "$page" &>/dev/null &
+	disown
+	echo "click Download, solve the captcha, then cancel the browser's download..." >&2
+
+	# wait until the new download shows up in Chromium's history (takes ~10s)
+	while [[ -z $url ]]; do
+		sleep 2
+		cp "$db" "$tmp" 2>/dev/null &&
+			url=$(sqlite3 "$tmp" "select url from downloads_url_chains where id > $last
+                                  order by id desc, chain_index desc limit 1" 2>/dev/null)
+	done
+	rm -f "$tmp"
 
 	ver=$(chromium --version | grep -oE '[0-9]+' | head -n1)
 	aria2c -c -x 8 -s 8 -k 1M --file-allocation=none \
