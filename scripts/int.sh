@@ -9,8 +9,8 @@ takeScreenshot() {
 	if [[ "$XDG_CURRENT_DESKTOP" == "KDE" ]]; then
 		spectacle -b -r -n -o "${SCREENSHOTNAME}" || exit 1
 	else
-		notify-send "DE/WM not supported"
-		exit 1
+		geom="$(slurp)" || exit 1 # user pressed Esc
+		grim -g "$geom" "${SCREENSHOTNAME}" || exit 1
 	fi
 
 	for _ in $(seq 1 50); do
