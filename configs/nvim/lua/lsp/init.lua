@@ -40,6 +40,22 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		nmap("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
 		nmap("<leader>ws", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[W]orkspace [S]ymbols")
 
+		-- TypeScript (tsc): one-keypress source actions
+		if client.name == "tsc" then
+			nmap("<leader>to", function()
+				vim.lsp.buf.code_action({
+					context = { only = { "source.organizeImports" }, diagnostics = {} },
+					apply = true,
+				})
+			end, "Organize imports")
+			nmap("<leader>tf", function()
+				vim.lsp.buf.code_action({
+					context = { only = { "source.fixAll" }, diagnostics = {} },
+					apply = true,
+				})
+			end, "Fix all")
+		end
+
 		-- Highlight other occurrences of the symbol under cursor when resting
 		if client:supports_method("textDocument/documentHighlight") then
 			local grp = vim.api.nvim_create_augroup("nvim/lsp-highlight-" .. ev.buf, { clear = true })
@@ -105,6 +121,7 @@ vim.lsp.enable({
 	-- "graphql",
 	"bashls",
 	"ls_emmet",
+	"tsc",
 })
 
 -- Zig
@@ -119,41 +136,5 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 				return c.name == "zls"
 			end,
 		})
-	end,
-})
-
--- Typescript
-
-local status_ok, tstools = pcall(require, "typescript-tools")
-if not status_ok then
-	return
-end
-
-tstools.setup({
-	settings = {
-		separate_diagnostic_server = true,
-		publish_diagnostic_on = "insert_leave",
-	},
-})
-
-vim.api.nvim_create_autocmd("LspAttach", {
-	group = vim.api.nvim_create_augroup("nvim/tstools", { clear = true }),
-	callback = function(ev)
-		local client = vim.lsp.get_client_by_id(ev.data.client_id)
-		if not client or client.name ~= "typescript-tools" then
-			return
-		end
-		local function nmap(keys, cmd, desc)
-			vim.keymap.set(
-				"n",
-				keys,
-				"<cmd>" .. cmd .. "<CR>",
-				{ buffer = ev.buf, silent = true, desc = "TS: " .. desc }
-			)
-		end
-		nmap("<leader>tm", "TSToolsAddMissingImports", "Add missing imports")
-		nmap("<leader>to", "TSToolsOrganizeImports", "Organize imports")
-		nmap("<leader>tf", "TSToolsFixAll", "Fix all")
-		nmap("<leader>tr", "TSToolsRenameFile", "Rename file")
 	end,
 })
