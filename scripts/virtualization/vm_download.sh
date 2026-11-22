@@ -1079,116 +1079,60 @@ build_unattended_windows_xml() {
 EOF
 }
 
-getWindowsISOLink() {
-	local selected_iso
-	selected_iso=$(sed 's/<a /\n<a /g' |
-		grep '\.iso</a>' |
-		sed -E 's/.*href=["\x27]?([^ "]+)["\x27]? .*>\s*([^<]+\.iso)\s*<\/a>.*/\2\t\1/' | sed '/^.*ge_release/d' | sort |
-		fzf --delimiter='\t' --with-nth=1 \
-			--preview='echo Link: {2}' --preview-window=down:1)
-
-	if [[ -n "$selected_iso" ]]; then
-		local link
-		link=$(echo "$selected_iso" | awk -F'\t' '{print $2}')
-		echo "$link"
-	fi
-}
-
 download_drivers() {
-	echo -e "Downloading Spice Agents for copy paste functionality ..."
-	download "https://www.spice-space.org/download/windows/spice-webdavd/spice-webdavd-x64-latest.msi" "spice-webdavd-x64-latest.msi"
-	download "https://www.spice-space.org/download/windows/vdagent/vdagent-win-0.10.0/spice-vdagent-x64-0.10.0.msi" "spice-vdagent-x64-0.10.0.msi"
-	download "https://www.spice-space.org/download/windows/usbdk/UsbDk_1.0.22_x64.msi" "UsbDk_1.0.22_x64.msi"
+	local url
+	echo "Downloading Spice Agents for copy paste functionality ..."
+	for url in \
+		https://www.spice-space.org/download/windows/spice-webdavd/spice-webdavd-x64-latest.msi \
+		https://www.spice-space.org/download/windows/vdagent/vdagent-win-0.10.0/spice-vdagent-x64-0.10.0.msi \
+		https://www.spice-space.org/download/windows/usbdk/UsbDk_1.0.22_x64.msi; do
+		download "$url" "${url##*/}" || return 1
+	done
 }
 
 download_windows() {
-	# CACHE PASSWORD
-	sudo sed -i '71 a Defaults        timestamp_timeout=30000' /etc/sudoers
+	version=${1:?usage: download_windows VERSION}
+	read -rp "Username for an unattended install (empty for a normal installer): " user
 
-	# Check if unattended user is needed
-	read -p "Do you want an unattended installer ? (y/n/yes/no):" use_unattended_installer
-	local admin_username=""
-	if [[ "${use_unattended_installer}" = "y" || "${use_unattended_installer}" = "yes" ]]; then
-		read -p "Enter username for your account:" admin_username
-	fi
+	# work inside DOWNLOAD_DIR so the final move is a rename and /tmp does not fill up
+	tmp=$(mktemp -d -p "$DOWNLOAD_DIR" "tmp-$version-XXXXXX") || exit 1
+	trap 'rm -rf "$tmp"' EXIT
+	cd "$tmp" || exit 1
 
-	local windows_version="$1"
-	local iso_file_name="${windows_version}.iso"
+	download_win11_iso "$version.iso" || exit 1
 
-	# download windows iso
-	local current_timestamp=$(date +%s)
-	local temporary_download_directory=$(echo "${DOWNLOAD_DIR}/tmp_download-${windows_version}-${current_timestamp}")
-	mkdir -p "${temporary_download_directory}"
-	cd "${temporary_download_directory}"
-	download_win11_iso "${iso_file_name}"
-
-	# mount downloaded iso
-	mkdir iso_mount
-	sudo mount -o rw,loop "${iso_file_name}" iso_mount
-
-	# copy all the content of iso to a folder
-	local new_timestamp=$(date +%s)
-	local modified_windows_directory="${temporary_download_directory}/win-${new_timestamp}"
-	mkdir "${modified_windows_directory}"
-	sudo cp -r iso_mount/* "${modified_windows_directory}"
-
-	# add drivers and unattended.xml file
-	local modification_directory="${temporary_download_directory}/modifications-${new_timestamp}"
-	mkdir "${modification_directory}"
-	cd "${modification_directory}"
-
-	if [[ "${use_unattended_installer}" = "y" || "${use_unattended_installer}" = "yes" ]]; then
+	if [[ -z $user ]]; then
+		# nothing to add: the Microsoft ISO is the installer
+		mv "$version.iso" "$DOWNLOAD_DIR/$version-non-unattended-$(date +%s).iso" || exit 1
+	else
 		echo "Creating unattended installer ...."
-		build_unattended_windows_xml "${modification_directory}/autounattend.xml"
-		sed -i "s/<USERNAME_HERE>/${admin_username}/g" "${modification_directory}/autounattend.xml"
-		sed -i "s/ Project//g" "${modification_directory}/autounattend.xml"
+		7z x -owin "$version.iso" >/dev/null || exit 1
+		rm "$version.iso"
 
-		download_drivers
-	else
-		echo "Creating non-unattended installer ...."
+		build_unattended_windows_xml "$tmp/win/autounattend.xml" || exit 1
+		sed -i -e "s/<USERNAME_HERE>/$user/g" -e 's/ Project//g' win/autounattend.xml
+		(cd win && download_drivers) || exit 1
+
+		mkisofs \
+			-iso-level 4 \
+			-udf \
+			-rock \
+			-disable-deep-relocation \
+			-untranslated-filenames \
+			-b boot/etfsboot.com \
+			-no-emul-boot \
+			-boot-load-size 8 \
+			-eltorito-alt-boot \
+			-eltorito-platform efi \
+			-b efi/microsoft/boot/efisys.bin \
+			-o "$DOWNLOAD_DIR/$version-unattended-$(date +%s).iso" \
+			win || exit 1
 	fi
-	cd ..
 
-	# unmount iso
-	sudo umount iso_mount
-	sudo rm -rf iso_mount
-
-	# build iso
-	local iso_file_name_final=""
-	local iso_file_suffix=""
-	if [[ "${use_unattended_installer}" = "y" || "${use_unattended_installer}" = "yes" ]]; then
-		iso_file_suffix="unattended"
-	else
-		iso_file_suffix="non-unattended"
-	fi
-	local new_timestamp=$(date +%s)
-	iso_file_name_final="${windows_version}-${iso_file_suffix}-${new_timestamp}.iso"
-
-	mkisofs \
-		-iso-level 4 \
-		-rock \
-		-disable-deep-relocation \
-		-untranslated-filenames \
-		-b boot/etfsboot.com \
-		-no-emul-boot \
-		-boot-load-size 8 \
-		-eltorito-alt-boot \
-		-eltorito-platform efi \
-		-b efi/microsoft/boot/efisys.bin \
-		-o "../${iso_file_name_final}" \
-		"${modified_windows_directory}" "${modification_directory}"
-
-	# Download virtio iso
-	cd "${DOWNLOAD_DIR}"
-	rm -rf "virtio.iso"
 	echo "Downloading Virtio Drivers for setting higher resolution ..."
-	download "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso" "virtio.iso"
-
-	# Delete Temp Windows Directory
-	sudo rm -rf "${temporary_download_directory}"
-
-	# DELETE CACHED PASSWORD
-	sudo sed -i '72d' /etc/sudoers
+	cd "$DOWNLOAD_DIR" || exit 1
+	rm -f virtio.iso
+	download "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso" virtio.iso
 }
 
 download_windows11() {
@@ -1531,152 +1475,6 @@ download_win11_iso() {
 	say "sha256 $hash"
 	printf '%s\n' "$out"
 }
-
-# download_zerofs() {
-# 	local page=$1 out=$2 tmp last url ver
-# 	local db=${XDG_CONFIG_HOME:-$HOME/.config}/chromium/Default/History
-# 	[[ -z $page || -z $out ]] && {
-# 		echo "usage: zdl <page-url> <output-file>" >&2
-# 		return 2
-# 	}
-#
-# 	# remember the newest download already in history, so only a later one counts
-# 	tmp=$(mktemp) || return
-# 	cp "$db" "$tmp" && last=$(sqlite3 "$tmp" 'select coalesce(max(id), 0) from downloads_url_chains')
-# 	[[ -z $last ]] && {
-# 		echo "zdl: cannot read $db" >&2
-# 		rm -f "$tmp"
-# 		return 1
-# 	}
-#
-# 	chromium "$page" &>/dev/null &
-# 	disown
-# 	echo "click Download, solve the captcha, then cancel the browser's download..." >&2
-#
-# 	# wait until the new download shows up in Chromium's history (takes ~10s)
-# 	while [[ -z $url ]]; do
-# 		sleep 2
-# 		cp "$db" "$tmp" 2>/dev/null &&
-# 			url=$(sqlite3 "$tmp" "select url from downloads_url_chains where id > $last
-#                                   order by id desc, chain_index desc limit 1" 2>/dev/null)
-# 	done
-# 	rm -f "$tmp"
-#
-# 	ver=$(chromium --version | grep -oE '[0-9]+' | head -n1)
-# 	aria2c -c -x 8 -s 8 -k 1M --file-allocation=none \
-# 		--user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$ver.0.0.0 Safari/537.36" \
-# 		--referer="$page" \
-# 		-d "$(dirname "$out")" -o "$(basename "$out")" "$url"
-# }
-
-# download_buzzheavier() {
-# 	local input_str="$1"
-# 	local output_path="$2"
-#
-# 	if [[ -z "$input_str" ]]; then
-# 		echo "Usage: download_buzzheavier <id_or_url> [output_path/filename]"
-# 		return 1
-# 	fi
-#
-# 	# 1. Resolve Initial URL
-# 	local url
-# 	if [[ "$input_str" == http* ]]; then
-# 		if [[ "$input_str" == *buzzheavier.com* || "$input_str" == *bzzhr.co* ||
-# 			"$input_str" == *fuckingfast.net* || "$input_str" == *fuckingfast.co* ]]; then
-# 			url="$input_str"
-# 		else
-# 			echo "Error: Domain not recognized: $input_str"
-# 			return 1
-# 		fi
-# 	elif [[ ${#input_str} -eq 12 ]]; then
-# 		url="https://buzzheavier.com/${input_str}"
-# 	else
-# 		echo "Error: Invalid input format: $input_str"
-# 		return 1
-# 	fi
-#
-# 	echo "[INFO] Resolving direct link..."
-#
-# 	# 2. Get HTMX Redirect (Direct Link) via Headers
-# 	# We perform a HEAD request to get the hx-redirect header.
-# 	local domain
-# 	domain=$(echo "$url" | awk -F/ '{print $3}')
-# 	local download_endpoint="${url}/download"
-#
-# 	local hx_redirect
-# 	hx_redirect=$(curl -s -I -X HEAD \
-# 		-H "hx-current-url: $url" \
-# 		-H "hx-request: true" \
-# 		-H "referer: $url" \
-# 		"$download_endpoint" 2>/dev/null | grep -i '^hx-redirect:' | awk '{print $2}' | tr -d '\r')
-#
-# 	if [[ -z "$hx_redirect" ]]; then
-# 		echo "Error: Download link not found. The file might be deleted or is a folder."
-# 		return 1
-# 	fi
-#
-# 	# 3. Build Final URL
-# 	local final_url
-# 	if [[ "$hx_redirect" == /dl/* ]]; then
-# 		final_url="https://${domain}${hx_redirect}"
-# 	else
-# 		final_url="$hx_redirect"
-# 	fi
-#
-# 	echo "[DEBUG] Direct link: $final_url"
-#
-# 	# 4. Determine Output Filename and Directory
-# 	local final_filename
-# 	local final_dir="."
-#
-# 	# Extract filename from URL (decoding %20, etc.)
-# 	local url_filename
-# 	url_filename=$(basename "$final_url")
-# 	# python one-liner to decode url encoded characters (e.g. %20 -> space)
-# 	if command -v python3 &>/dev/null; then
-# 		url_filename=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$url_filename")
-# 	fi
-#
-# 	if [[ -z "$output_path" ]]; then
-# 		# No second arg: use current dir + URL filename
-# 		final_filename="$url_filename"
-# 	elif [[ -d "$output_path" ]]; then
-# 		# Second arg is a directory: use dir + URL filename
-# 		final_dir="${output_path%/}" # remove trailing slash if present
-# 		final_filename="$url_filename"
-# 	else
-# 		# Second arg is a file path: use it exactly as provided
-# 		final_dir=$(dirname "$output_path")
-# 		final_filename=$(basename "$output_path")
-# 	fi
-#
-# 	local full_output_path="${final_dir}/${final_filename}"
-#
-# 	# 5. Download (High Speed Logic)
-# 	echo "[INFO] Saving to: $full_output_path"
-#
-# 	if command -v aria2c &>/dev/null; then
-# 		# method: aria2c (Multi-connection, usually maxes out bandwidth)
-# 		echo "[INFO] Using aria2c for accelerated download (16 connections)..."
-# 		aria2c -x 16 -s 16 -k 1M \
-# 			--dir="$final_dir" \
-# 			--out="$final_filename" \
-# 			--header="Referer: $url" \
-# 			"$final_url"
-# 	else
-# 		# fallback: curl
-# 		echo "[INFO] aria2c not found. Using curl (single connection)..."
-# 		echo "[TIP] Install 'aria2' for faster downloads."
-# 		curl -L --progress-bar -o "$full_output_path" "$final_url"
-# 	fi
-#
-# 	if [[ $? -eq 0 ]]; then
-# 		echo "[SUCCESS] Download complete."
-# 	else
-# 		echo "[ERROR] Download failed."
-# 		return 1
-# 	fi
-# }
 
 # Extract links html from html
 extract_links_from_html() {
