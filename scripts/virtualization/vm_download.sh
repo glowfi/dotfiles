@@ -1113,20 +1113,14 @@ download_windows() {
 	fi
 
 	local windows_version="$1"
-	local iso_download_url=$(curl -s https://massgrave.dev/windows_11_links | getWindowsISOLink "$windows_version")
 	local iso_file_name="${windows_version}.iso"
-
-	if [[ -z "${iso_download_url}" ]]; then
-		echo "No windows iso link found"
-		exit 1
-	fi
 
 	# download windows iso
 	local current_timestamp=$(date +%s)
 	local temporary_download_directory=$(echo "${DOWNLOAD_DIR}/tmp_download-${windows_version}-${current_timestamp}")
 	mkdir -p "${temporary_download_directory}"
 	cd "${temporary_download_directory}"
-	download_zerofs "${iso_download_url}" "${iso_file_name}"
+	download_win11_iso "${iso_file_name}"
 
 	# mount downloaded iso
 	mkdir iso_mount
@@ -1318,151 +1312,371 @@ download() {
 	return 1
 }
 
-download_zerofs() {
-	local page=$1 out=$2 tmp last url ver
-	local db=${XDG_CONFIG_HOME:-$HOME/.config}/chromium/Default/History
-	[[ -z $page || -z $out ]] && {
-		echo "usage: zdl <page-url> <output-file>" >&2
-		return 2
+download_win11_iso() {
+	out=${1:?usage: win11_iso OUT.iso [language] [x64|arm64]}
+	lang=${2:-}
+	arch=${3:-}
+
+	ua='Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
+	ref='https://www.microsoft.com/software-download/windows11'
+	profile=606624d44113
+	instance=560dc9f3-1aa5-4a2f-b63c-9e18f8d0e175
+	conns=${WIN11_ISO_CONNS:-8}
+	doh_url=${WIN11_ISO_DOH-https://1.1.1.1/dns-query} # unset: default; empty: system DNS
+	doh=()
+	[[ $doh_url ]] && doh=(--doh-url "$doh_url")
+
+	say() { printf '%s\n' "$*" >&2; }
+	die() {
+		say "win11_iso: $*"
+		exit 1
 	}
 
-	# remember the newest download already in history, so only a later one counts
-	tmp=$(mktemp) || return
-	cp "$db" "$tmp" && last=$(sqlite3 "$tmp" 'select coalesce(max(id), 0) from downloads_url_chains')
-	[[ -z $last ]] && {
-		echo "zdl: cannot read $db" >&2
-		rm -f "$tmp"
-		return 1
+	# pick PROMPT: one line from stdin through fzf; cancelling aborts the whole run
+	pick() {
+		command -v fzf >/dev/null || die "missing dependency: fzf (or pass language and arch as arguments)"
+		fzf --height=40% --reverse --no-multi --prompt="$1> " "${@:2}" || die "cancelled"
 	}
 
-	chromium "$page" &>/dev/null &
-	disown
-	echo "click Download, solve the captcha, then cancel the browser's download..." >&2
-
-	# wait until the new download shows up in Chromium's history (takes ~10s)
-	while [[ -z $url ]]; do
-		sleep 2
-		cp "$db" "$tmp" 2>/dev/null &&
-			url=$(sqlite3 "$tmp" "select url from downloads_url_chains where id > $last
-                                  order by id desc, chain_index desc limit 1" 2>/dev/null)
+	for dep in curl jq aria2c sha256sum; do
+		command -v "$dep" >/dev/null || die "missing dependency: $dep"
 	done
-	rm -f "$tmp"
+	[[ -e $out ]] && die "$out already exists"
+	[[ $arch ]] || arch=$(printf '%s\n' x64 arm64 | pick architecture) || exit 1
+	case $arch in
+	x64 | amd64 | x86_64) page=windows11 dtype=1 ;;
+	arm64 | aarch64) page=windows11arm64 dtype=2 ;;
+	*) die "unsupported architecture '$arch' (x64 or arm64)" ;;
+	esac
+	mkdir -p -- "$(dirname -- "$out")" || exit 1
+	tmp=$(mktemp -d) || exit 1
+	trap 'rm -rf -- "$tmp"' EXIT
+	jar=$tmp/cookies
 
-	ver=$(chromium --version | grep -oE '[0-9]+' | head -n1)
-	aria2c -c -x 8 -s 8 -k 1M --file-allocation=none \
-		--user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$ver.0.0.0 Safari/537.36" \
-		--referer="$page" \
-		-d "$(dirname "$out")" -o "$(basename "$out")" "$url"
-}
+	# True if HOST resolves to a blackhole address: the mark of a DNS blocker or hosts-file entry.
+	blackholed() { getent ahosts "$1" | awk '{ print $1 }' | grep -qxE '0\.0\.0\.0|127\..*|::1?'; }
 
-download_buzzheavier() {
-	local input_str="$1"
-	local output_path="$2"
+	# GET a catalog URL and print its body. Redirects are followed by hand so
+	# every hop is checked against Microsoft's three catalog hosts.
+	get() {
+		local url=$1 host res code _
+		for _ in 1 2 3 4 5; do
+			[[ $url == https://* ]] || die "refusing non-https URL: $url"
+			host=${url#https://}
+			host=${host%%[/?:]*}
+			case $host in
+			www.microsoft.com | vlscppe.microsoft.com | ov-df.microsoft.com) ;;
+			*) die "catalog request left Microsoft's hosts ($host)" ;;
+			esac
+			res=$(curl -sS "${doh[@]}" --retry 3 --max-time 60 --max-filesize 4194304 \
+				-A "$ua" -e "$ref" -b "$jar" -c "$jar" \
+				-o "$tmp/body" -w '%{http_code} %{redirect_url}' "$url") || {
+				[[ $doh_url ]] &&
+					die "request to $host failed (names are resolved through $doh_url;" \
+						"set WIN11_ISO_DOH= to use system DNS, or point it at another resolver)"
+				blackholed "$host" &&
+					die "$host is blocked by your DNS (it resolves to a blackhole address)." \
+						"Allowlist it in your blocker or /etc/hosts, or leave WIN11_ISO_DOH unset"
+				die "request to $host failed"
+			}
+			code=${res%% *}
+			case $code in
+			30[12378])
+				url=${res#* }
+				[[ $url ]] || die "empty redirect from $host"
+				;;
+			2??)
+				cat "$tmp/body"
+				return 0
+				;;
+			*) die "Microsoft ($host) answered HTTP $code" ;;
+			esac
+		done
+		die "too many catalog redirects"
+	}
 
-	if [[ -z "$input_str" ]]; then
-		echo "Usage: download_buzzheavier <id_or_url> [output_path/filename]"
-		return 1
-	fi
+	# api ACTION PRODUCT_EDITION_ID SKU
+	api() {
+		get "https://www.microsoft.com/software-download-connector/api/$1?profile=$profile&productEditionId=$2&SKU=$3&friendlyFileName=undefined&Locale=en-US&sessionID=$session"
+	}
 
-	# 1. Resolve Initial URL
-	local url
-	if [[ "$input_str" == http* ]]; then
-		if [[ "$input_str" == *buzzheavier.com* || "$input_str" == *bzzhr.co* ||
-			"$input_str" == *fuckingfast.net* || "$input_str" == *fuckingfast.co* ]]; then
-			url="$input_str"
-		else
-			echo "Error: Domain not recognized: $input_str"
-			return 1
+	# Dies if the JSON in $1 is malformed or carries Microsoft's Errors array.
+	check_errors() {
+		local msg
+		msg=$(jq -r '(.Errors // [])[0].Value // empty' <<<"$1") || die "$2 is not JSON"
+		[[ -z $msg ]] || die "Microsoft refused the download request: $msg"
+	}
+
+	ms_host() {
+		local h=${1#https://}
+		[[ $1 == https://* ]] || return 1
+		h=${h%%[/?:]*}
+		[[ $h == *.microsoft.com ]]
+	}
+
+	# 1. product edition id from the public download page
+	say "reading Microsoft's download page"
+	html=$(get "https://www.microsoft.com/en-us/software-download/$page") || exit 1
+	product=$(tr '\n' ' ' <<<"$html" |
+		grep -oiP '<select\b[^>]*\bid=["'\'']product-edition["'\''][^>]*>.*?</select>' |
+		grep -oiP '<option\b[^>]*\bvalue=["'\'']\K[0-9]+' | head -n1)
+	[[ $product ]] || die "Microsoft's download page changed (no product edition)"
+
+	# 2. session handshake: the session id ties the fingerprint requests to the API calls
+	say "opening a download session"
+	session=$(</proc/sys/kernel/random/uuid)
+	get "https://vlscppe.microsoft.com/tags?org_id=y6jn8c31&session_id=$session" >/dev/null
+	js=$(get "https://ov-df.microsoft.com/mdt.js?instanceId=$instance&PageId=si&session_id=$session") || exit 1
+	w=$(grep -oP '[?&]w=\K[A-F0-9]+' <<<"$js" | head -n1)
+	rticks=$(grep -oP 'rticks=\\?"\+?\K[0-9]+' <<<"$js" | head -n1)
+	[[ $w && $rticks ]] || die "Microsoft did not provide a download session; retry later"
+	get "https://ov-df.microsoft.com/?session_id=$session&CustomerId=$instance&PageId=si&w=$w&mdt=$(date +%s%3N)&rticks=$rticks" >/dev/null
+
+	# 3. language -> SKU id
+	skus=$(api getskuinformationbyproductedition "$product" undefined) || exit 1
+	check_errors "$skus" "language list"
+	if [[ $lang ]]; then
+		sku=$(jq -r --arg l "$lang" '
+            def norm: ascii_downcase | gsub("[^a-z]"; "");
+            first(.Skus[]? | select((.Language | norm) == ($l | norm)) | .Id | tostring)' <<<"$skus")
+		if [[ -z $sku ]]; then
+			say "win11_iso: Microsoft has no ISO in '$lang'. Available:"
+			jq -r '.Skus[]?.Language | "  " + .' <<<"$skus" >&2
+			exit 1
 		fi
-	elif [[ ${#input_str} -eq 12 ]]; then
-		url="https://buzzheavier.com/${input_str}"
 	else
-		echo "Error: Invalid input format: $input_str"
-		return 1
+		# lines are "id<TAB>Language<TAB>LocalizedLanguage"; fzf shows and searches all but the id
+		choice=$(jq -r '.Skus[]? | [(.Id | tostring), .Language, (.LocalizedLanguage // "")] | @tsv' <<<"$skus" |
+			pick language --delimiter='\t' --with-nth=2..) || exit 1
+		IFS=$'\t' read -r sku lang _ <<<"$choice"
+		[[ $sku ]] || die "Microsoft returned no languages"
 	fi
 
-	echo "[INFO] Resolving direct link..."
+	# 4. SKU id -> signed ISO link (valid 24 hours) and, if published, its SHA-256
+	links=$(api GetProductDownloadLinksBySku undefined "$sku") || exit 1
+	check_errors "$links" "download link list"
+	IFS=$'\t' read -r uri want < <(jq -r --argjson t "$dtype" '
+        first(.ProductDownloadOptions[]? | select(.DownloadType == $t))
+        | [.Uri // "", (.Sha256 // "" | ascii_downcase)] | @tsv' <<<"$links")
+	[[ $uri ]] || die "Microsoft did not return an ISO for $arch"
+	ms_host "$uri" || die "ISO link points outside Microsoft: ${uri%%\?*}"
+	name=${uri%%\?*}
+	say "resolved ${name##*/} [$lang, $arch] (link expires $(jq -r '.DownloadExpirationDatetime // "in 24 hours"' <<<"$links"))"
 
-	# 2. Get HTMX Redirect (Direct Link) via Headers
-	# We perform a HEAD request to get the hx-redirect header.
-	local domain
-	domain=$(echo "$url" | awk -F/ '{print $3}')
-	local download_endpoint="${url}/download"
+	# 5. preflight: walk the redirects by hand so every hop stays on Microsoft's
+	#    hosts, and read the file's ETag from a one-byte range request
+	url=$uri
+	code=
+	for _ in 1 2 3 4 5 6 7 8 9 10; do
+		ms_host "$url" || die "ISO link points outside Microsoft: ${url%%\?*}"
+		res=$(curl -sS "${doh[@]}" -r 0-0 --max-filesize 1048576 --connect-timeout 30 -A "$ua" \
+			-D "$tmp/hdr" -o /dev/null -w '%{http_code} %{redirect_url}' "$url")
+		rc=$?
+		# 63: the server ignored the range and curl refused the full body; the headers are still there
+		[[ $rc == 0 || $rc == 63 ]] || die "could not reach the ISO link (curl exit $rc${doh_url:+, DNS via $doh_url})"
+		code=${res%% *}
+		case $code in
+		2??) break ;;
+		30[12378])
+			url=${res#* }
+			[[ $url ]] || die "redirect without a location"
+			;;
+		403 | 410) die "the download link expired; run again for a new one" ;;
+		*) die "ISO link answered HTTP $code" ;;
+		esac
+		code=
+	done
+	[[ $code ]] || die "too many redirects"
+	etag=$(tr -d '\r' <"$tmp/hdr" | awk 'tolower($1) == "etag:" { e = $2 } END { print e }')
+	[[ $etag == W/* ]] && etag= # only a strong ETag allows a later resume
 
-	local hx_redirect
-	hx_redirect=$(curl -s -I -X HEAD \
-		-H "hx-current-url: $url" \
-		-H "hx-request: true" \
-		-H "referer: $url" \
-		"$download_endpoint" 2>/dev/null | grep -i '^hx-redirect:' | awk '{print $2}' | tr -d '\r')
-
-	if [[ -z "$hx_redirect" ]]; then
-		echo "Error: Download link not found. The file might be deleted or is a folder."
-		return 1
+	# 6. download with aria2c to OUT.part. A partial file from an earlier run is
+	#    resumed only if aria2's control file is there and the ETag still matches;
+	#    aria2 writes segments out of order, so the bare file proves nothing.
+	part=$out.part
+	ctl=$part.aria2
+	meta=$part.etag
+	if [[ -e $part || -e $ctl ]]; then
+		if [[ -s $part && -s $ctl && -s $meta && $etag && $(<"$meta") == "$etag" ]]; then
+			say "resuming $part"
+		else
+			say "discarding an earlier partial download that cannot be validated"
+			rm -f -- "$part" "$ctl" "$meta"
+		fi
 	fi
+	if [[ $etag ]]; then printf '%s' "$etag" >"$meta"; else rm -f -- "$meta"; fi
+	aria2c --stderr=true --continue=true --auto-file-renaming=false \
+		--max-connection-per-server="$conns" --split="$conns" \
+		--max-tries=5 --retry-wait=4 --connect-timeout=30 \
+		--file-allocation=none --user-agent="$ua" \
+		--console-log-level=warn --summary-interval=0 \
+		--dir="$(dirname -- "$part")" --out="$(basename -- "$part")" "$url" ||
+		die "download failed (aria2c exit $?); partial kept at $part, run again to resume"
 
-	# 3. Build Final URL
-	local final_url
-	if [[ "$hx_redirect" == /dl/* ]]; then
-		final_url="https://${domain}${hx_redirect}"
-	else
-		final_url="$hx_redirect"
-	fi
+	# 7. ISO structure: ISO-sized, and an ISO/UDF volume descriptor from sector 16
+	size=$(stat -c %s -- "$part") || exit 1
+	((size >= 34816 && size % 2048 == 0)) || die "not an ISO-sized image (kept $part)"
+	dd if="$part" bs=2048 skip=16 count=16 2>/dev/null |
+		LC_ALL=C grep -aqE 'CD001|BEA01|NSR0[23]' ||
+		die "no ISO/UDF volume descriptor (kept $part)"
 
-	echo "[DEBUG] Direct link: $final_url"
-
-	# 4. Determine Output Filename and Directory
-	local final_filename
-	local final_dir="."
-
-	# Extract filename from URL (decoding %20, etc.)
-	local url_filename
-	url_filename=$(basename "$final_url")
-	# python one-liner to decode url encoded characters (e.g. %20 -> space)
-	if command -v python3 &>/dev/null; then
-		url_filename=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$url_filename")
-	fi
-
-	if [[ -z "$output_path" ]]; then
-		# No second arg: use current dir + URL filename
-		final_filename="$url_filename"
-	elif [[ -d "$output_path" ]]; then
-		# Second arg is a directory: use dir + URL filename
-		final_dir="${output_path%/}" # remove trailing slash if present
-		final_filename="$url_filename"
-	else
-		# Second arg is a file path: use it exactly as provided
-		final_dir=$(dirname "$output_path")
-		final_filename=$(basename "$output_path")
-	fi
-
-	local full_output_path="${final_dir}/${final_filename}"
-
-	# 5. Download (High Speed Logic)
-	echo "[INFO] Saving to: $full_output_path"
-
-	if command -v aria2c &>/dev/null; then
-		# method: aria2c (Multi-connection, usually maxes out bandwidth)
-		echo "[INFO] Using aria2c for accelerated download (16 connections)..."
-		aria2c -x 16 -s 16 -k 1M \
-			--dir="$final_dir" \
-			--out="$final_filename" \
-			--header="Referer: $url" \
-			"$final_url"
-	else
-		# fallback: curl
-		echo "[INFO] aria2c not found. Using curl (single connection)..."
-		echo "[TIP] Install 'aria2' for faster downloads."
-		curl -L --progress-bar -o "$full_output_path" "$final_url"
-	fi
-
-	if [[ $? -eq 0 ]]; then
-		echo "[SUCCESS] Download complete."
-	else
-		echo "[ERROR] Download failed."
-		return 1
-	fi
+	# 8. SHA-256 against the one Microsoft published, then move into place
+	say "verifying SHA-256"
+	hash=$(sha256sum -- "$part") || exit 1
+	hash=${hash%% *}
+	[[ -z $want || $want == "$hash" ]] || die "SHA-256 mismatch: expected $want, got $hash (kept $part)"
+	mv -- "$part" "$out" || exit 1
+	rm -f -- "$meta" "$ctl"
+	[[ $want ]] || say "note: Microsoft published no SHA-256 for this link; nothing to compare against"
+	say "sha256 $hash"
+	printf '%s\n' "$out"
 }
+
+# download_zerofs() {
+# 	local page=$1 out=$2 tmp last url ver
+# 	local db=${XDG_CONFIG_HOME:-$HOME/.config}/chromium/Default/History
+# 	[[ -z $page || -z $out ]] && {
+# 		echo "usage: zdl <page-url> <output-file>" >&2
+# 		return 2
+# 	}
+#
+# 	# remember the newest download already in history, so only a later one counts
+# 	tmp=$(mktemp) || return
+# 	cp "$db" "$tmp" && last=$(sqlite3 "$tmp" 'select coalesce(max(id), 0) from downloads_url_chains')
+# 	[[ -z $last ]] && {
+# 		echo "zdl: cannot read $db" >&2
+# 		rm -f "$tmp"
+# 		return 1
+# 	}
+#
+# 	chromium "$page" &>/dev/null &
+# 	disown
+# 	echo "click Download, solve the captcha, then cancel the browser's download..." >&2
+#
+# 	# wait until the new download shows up in Chromium's history (takes ~10s)
+# 	while [[ -z $url ]]; do
+# 		sleep 2
+# 		cp "$db" "$tmp" 2>/dev/null &&
+# 			url=$(sqlite3 "$tmp" "select url from downloads_url_chains where id > $last
+#                                   order by id desc, chain_index desc limit 1" 2>/dev/null)
+# 	done
+# 	rm -f "$tmp"
+#
+# 	ver=$(chromium --version | grep -oE '[0-9]+' | head -n1)
+# 	aria2c -c -x 8 -s 8 -k 1M --file-allocation=none \
+# 		--user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$ver.0.0.0 Safari/537.36" \
+# 		--referer="$page" \
+# 		-d "$(dirname "$out")" -o "$(basename "$out")" "$url"
+# }
+
+# download_buzzheavier() {
+# 	local input_str="$1"
+# 	local output_path="$2"
+#
+# 	if [[ -z "$input_str" ]]; then
+# 		echo "Usage: download_buzzheavier <id_or_url> [output_path/filename]"
+# 		return 1
+# 	fi
+#
+# 	# 1. Resolve Initial URL
+# 	local url
+# 	if [[ "$input_str" == http* ]]; then
+# 		if [[ "$input_str" == *buzzheavier.com* || "$input_str" == *bzzhr.co* ||
+# 			"$input_str" == *fuckingfast.net* || "$input_str" == *fuckingfast.co* ]]; then
+# 			url="$input_str"
+# 		else
+# 			echo "Error: Domain not recognized: $input_str"
+# 			return 1
+# 		fi
+# 	elif [[ ${#input_str} -eq 12 ]]; then
+# 		url="https://buzzheavier.com/${input_str}"
+# 	else
+# 		echo "Error: Invalid input format: $input_str"
+# 		return 1
+# 	fi
+#
+# 	echo "[INFO] Resolving direct link..."
+#
+# 	# 2. Get HTMX Redirect (Direct Link) via Headers
+# 	# We perform a HEAD request to get the hx-redirect header.
+# 	local domain
+# 	domain=$(echo "$url" | awk -F/ '{print $3}')
+# 	local download_endpoint="${url}/download"
+#
+# 	local hx_redirect
+# 	hx_redirect=$(curl -s -I -X HEAD \
+# 		-H "hx-current-url: $url" \
+# 		-H "hx-request: true" \
+# 		-H "referer: $url" \
+# 		"$download_endpoint" 2>/dev/null | grep -i '^hx-redirect:' | awk '{print $2}' | tr -d '\r')
+#
+# 	if [[ -z "$hx_redirect" ]]; then
+# 		echo "Error: Download link not found. The file might be deleted or is a folder."
+# 		return 1
+# 	fi
+#
+# 	# 3. Build Final URL
+# 	local final_url
+# 	if [[ "$hx_redirect" == /dl/* ]]; then
+# 		final_url="https://${domain}${hx_redirect}"
+# 	else
+# 		final_url="$hx_redirect"
+# 	fi
+#
+# 	echo "[DEBUG] Direct link: $final_url"
+#
+# 	# 4. Determine Output Filename and Directory
+# 	local final_filename
+# 	local final_dir="."
+#
+# 	# Extract filename from URL (decoding %20, etc.)
+# 	local url_filename
+# 	url_filename=$(basename "$final_url")
+# 	# python one-liner to decode url encoded characters (e.g. %20 -> space)
+# 	if command -v python3 &>/dev/null; then
+# 		url_filename=$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$url_filename")
+# 	fi
+#
+# 	if [[ -z "$output_path" ]]; then
+# 		# No second arg: use current dir + URL filename
+# 		final_filename="$url_filename"
+# 	elif [[ -d "$output_path" ]]; then
+# 		# Second arg is a directory: use dir + URL filename
+# 		final_dir="${output_path%/}" # remove trailing slash if present
+# 		final_filename="$url_filename"
+# 	else
+# 		# Second arg is a file path: use it exactly as provided
+# 		final_dir=$(dirname "$output_path")
+# 		final_filename=$(basename "$output_path")
+# 	fi
+#
+# 	local full_output_path="${final_dir}/${final_filename}"
+#
+# 	# 5. Download (High Speed Logic)
+# 	echo "[INFO] Saving to: $full_output_path"
+#
+# 	if command -v aria2c &>/dev/null; then
+# 		# method: aria2c (Multi-connection, usually maxes out bandwidth)
+# 		echo "[INFO] Using aria2c for accelerated download (16 connections)..."
+# 		aria2c -x 16 -s 16 -k 1M \
+# 			--dir="$final_dir" \
+# 			--out="$final_filename" \
+# 			--header="Referer: $url" \
+# 			"$final_url"
+# 	else
+# 		# fallback: curl
+# 		echo "[INFO] aria2c not found. Using curl (single connection)..."
+# 		echo "[TIP] Install 'aria2' for faster downloads."
+# 		curl -L --progress-bar -o "$full_output_path" "$final_url"
+# 	fi
+#
+# 	if [[ $? -eq 0 ]]; then
+# 		echo "[SUCCESS] Download complete."
+# 	else
+# 		echo "[ERROR] Download failed."
+# 		return 1
+# 	fi
+# }
 
 # Extract links html from html
 extract_links_from_html() {
