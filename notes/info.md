@@ -875,3 +875,13 @@ sudo -u "$USER" qdbus6 org.kde.KWin /KWin reconfigure
 
 + intall plasma video wallpaper and configure in appearance screen locking
 ```
+
+# Brave debloat guide
+
+```
++ uuid  :%s/\v<[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}>//g
++ time unix epoch  :%s/\v"(\d{10}\.\d{6}|\d{17})"/0/g   :%s/\v<(\d{10}\.\d{6}|\d{17})>/0/g
++ metrics_last_log_time,    "savefile": { "default_directory": "" } "farbling_token" device id salt [remove]
++ protections->macs
++ extensions->settings
+```
