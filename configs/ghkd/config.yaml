@@ -168,7 +168,7 @@ keybindings:
               elif [[ "$choice" = "2" ]]; then
                   brave --profile-directory="Tmp"
               elif [[ "$choice" = "3" ]]; then
-                  $HOME/.local/bin/libw "librewolf:$(date +%s)" "default-default" "librewolf"
+                  $HOME/.local/bin/libw "librewolf:$(date +%s)" "default-release" "librewolf"
               fi
           fi
 
