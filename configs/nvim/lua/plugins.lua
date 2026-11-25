@@ -239,6 +239,13 @@ lazy.setup({
 
 		-- Languages Plugins
 
+		--   Typescript
+		-- {
+		-- 	"pmizio/typescript-tools.nvim",
+		-- 	dependencies = { "nvim-lua/plenary.nvim" },
+		-- 	ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+		-- },
+
 		--   Markdown
 		{
 			"iamcco/markdown-preview.nvim",

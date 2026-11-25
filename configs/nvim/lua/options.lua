@@ -196,3 +196,9 @@ vim.api.nvim_create_autocmd("UIEnter", {
 		end
 	end,
 })
+
+-- Clipboard
+if vim.env.SSH_TTY then
+	vim.g.clipboard = "osc52"
+end
+vim.opt.clipboard = "unnamedplus"
